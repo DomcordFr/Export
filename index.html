@@ -6914,56 +6914,21 @@ main.container {
 }
 
 .footer-inner {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  width: 100%;
-}
-
-.footer-top-row {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
+  text-align: center;
+  gap: 12px;
   width: 100%;
-}
-@media (min-width: 768px) {
-  .footer-top-row {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-.footer-bottom-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding-top: var(--space-2);
-  border: none !important;
-  border-top: none !important;
-}
-[data-theme="light"] .footer-bottom-row {
-  border: none !important;
-  border-top: none !important;
-}
-@media (min-width: 768px) {
-  .footer-bottom-row {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
 }
 
 .footer-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   cursor: pointer;
   user-select: none;
@@ -6975,10 +6940,19 @@ main.container {
   letter-spacing: -0.02em;
 }
 
-.footer-badges-group {
-  display: inline-flex;
+.footer-badge-section {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.footer-badges-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .footer-github-link {
@@ -7032,51 +7006,84 @@ main.container {
   color: var(--text-primary);
 }
 
-.footer-subheading-wrap {
-  display: inline-flex;
+.footer-local-wrap {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  flex-wrap: wrap;
   justify-content: center;
+  text-align: center;
+  width: 100%;
 }
-@media (min-width: 768px) {
-  .footer-subheading-wrap {
-    justify-content: flex-start;
-  }
-}
+
 .footer-local-subheading {
   color: var(--text-secondary);
-  text-decoration: none;
+  text-decoration: none !important;
+  font-size: var(--text-xs);
   font-weight: 500;
   transition: color 0.18s ease;
 }
 .footer-local-subheading:hover {
   color: var(--text-primary);
-  text-decoration: underline;
+  text-decoration: underline !important;
   text-underline-offset: 3px;
+}
+
+.footer-meta-links {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.footer-meta-dot {
+  color: var(--text-muted);
+  opacity: 0.6;
+  font-size: 10px;
+  user-select: none;
 }
 
 .footer-privacy-btn {
   background: none;
   border: none;
   padding: 0;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: var(--text-xs);
   font-family: inherit;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none !important;
   transition: color 0.18s ease;
 }
 .footer-privacy-btn:hover {
   color: var(--text-primary);
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+.footer-maintained-by {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-decoration: none !important;
+}
+
+.footer-lucid-link {
+  color: var(--text-secondary);
+  text-decoration: none !important;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+.footer-lucid-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
 }
 
 .footer-copy {
   font-size: 11px;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* Token Snippet Box (Mobile Optimized & Overflow Safe) */
@@ -7858,16 +7865,16 @@ main.container {
   <!-- ========================================== -->
   <footer class="dominion-footer">
     <div class="footer-inner">
-      <div class="footer-top-row">
-        <div class="footer-brand" onclick="app.switchTab('vault')">
-          <svg class="dominion-layers-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon class="layer-plate layer-plate-top" points="12 2 2 7 12 12 22 7 12 2"/>
-            <polyline class="layer-plate layer-plate-mid" points="2 12 12 17 22 12"/>
-            <polyline class="layer-plate layer-plate-bot" points="2 17 12 22 22 17"/>
-          </svg>
-          <span class="footer-title">Dominion Export</span>
-        </div>
+      <div class="footer-brand" onclick="app.switchTab('vault')" title="Dominion Export">
+        <svg class="dominion-layers-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon class="layer-plate layer-plate-top" points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline class="layer-plate layer-plate-mid" points="2 12 12 17 22 12"/>
+          <polyline class="layer-plate layer-plate-bot" points="2 17 12 22 22 17"/>
+        </svg>
+        <span class="footer-title">Dominion Export</span>
+      </div>
 
+      <div class="footer-badge-section">
         <div class="footer-badges-group">
           <a href="https://github.com/DomcordFr/Export" target="_blank" rel="noopener noreferrer" class="footer-github-link" title="View Source on GitHub">
             <svg class="github-svg-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -7877,21 +7884,22 @@ main.container {
             <span class="footer-external-arrow">↗</span>
           </a>
         </div>
+
+        <div class="footer-local-wrap">
+          <a href="https://github.com/DomcordFr/Export" target="_blank" rel="noopener noreferrer" class="footer-local-subheading">
+            Run your version locally!
+          </a>
+        </div>
       </div>
 
-      <div class="footer-bottom-row">
-        <div class="footer-subheading-wrap">
-          <a href="https://github.com/DomcordFr/Export" target="_blank" rel="noopener noreferrer" class="footer-local-subheading">
-            Run your own version locally!
-          </a>
-          <button type="button" class="footer-privacy-btn" onclick="app.openPrivacyModal()">
-            Privacy Policy
-          </button>
-        </div>
+      <div class="footer-meta-links">
+        <button type="button" class="footer-privacy-btn" onclick="app.openPrivacyModal()">Privacy Policy</button>
+        <span class="footer-meta-dot">•</span>
+        <span class="footer-maintained-by">Maintained by <a href="https://janitorai.com/profiles/20394fdf-c461-468d-a720-db53940be487_profile-of-lucid-67" target="_blank" rel="noopener noreferrer" class="footer-lucid-link">Lucid</a></span>
+      </div>
 
-        <div class="footer-copy">
-          100% Client-Side • Zero Data Retention • SillyTavern V2 Spec
-        </div>
+      <div class="footer-copy">
+        100% Client-Side • Zero Data Retention • SillyTavern V2 Spec
       </div>
     </div>
   </footer>
