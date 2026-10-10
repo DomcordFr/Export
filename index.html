@@ -7689,7 +7689,7 @@ main.container {
             <div class="profile-meta-handle" id="profile-handle">@handle</div>
             <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-secondary);">
               <div><strong id="profile-followers" style="color: var(--text-primary);">0</strong> Followers</div>
-              <div><strong id="profile-bots-count" style="color: var(--text-primary);">0</strong> Characters</div>
+              <div id="profile-bots-wrapper" style="display: none;"><strong id="profile-bots-count" style="color: var(--text-primary);">0</strong> Characters</div>
             </div>
           </div>
         </div>
@@ -9562,7 +9562,9 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     const isDirectMarkup = rawInput.includes('<style') || rawInput.includes('<div') || (rawInput.includes('{') && rawInput.includes('}')) || rawInput.includes('class=');
     if (isDirectMarkup) {
       this.showToast("Direct HTML/CSS markup detected. Parsing bio...", "info");
-      this.processBioMarkup(rawInput, { user_name: "Custom Bio", followers_count: 0, total_bots: 0 });
+      const card = document.getElementById('profile-meta-card');
+      if (card) card.style.display = 'none';
+      this.processBioMarkup(rawInput, { user_name: "Custom Bio", followers_count: 0 });
       if (btn) {
         btn.disabled = false;
         btn.classList.remove('is-loading');
@@ -9600,7 +9602,49 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     this.showToast(`Fetching profile "${profileId}"...`);
 
     try {
-      const profileData = await this.fetchSafeJson(this.getApiUrl(`profiles/${profileId}`), { headers: this.getHeaders() });
+      let profileData = null;
+      let botsData = null;
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
+
+      if (isUuid) {
+        // Fetch profile details and published characters in parallel
+        const [profRes, botsRes] = await Promise.all([
+          this.fetchSafeJson(this.getApiUrl(`profiles/${profileId}`), { headers: this.getHeaders() }),
+          this.fetchSafeJson(this.getApiUrl(`characters?user_id[]=${profileId}&page=1`), { headers: this.getHeaders() }).catch(() => null)
+        ]);
+        profileData = profRes;
+        botsData = botsRes;
+      } else {
+        // Handle vanity handles or usernames
+        try {
+          profileData = await this.fetchSafeJson(this.getApiUrl(`profiles/${profileId}`), { headers: this.getHeaders() });
+        } catch (profErr) {
+          const cleanUser = profileId.replace(/^@/, '').trim();
+          const searchRes = await this.fetchSafeJson(this.getApiUrl(`characters?page=1&search=${encodeURIComponent(cleanUser)}`), { headers: this.getHeaders() }).catch(() => null);
+          const foundBot = searchRes?.data?.find(b => (b.creator_name || '').toLowerCase() === cleanUser.toLowerCase()) || searchRes?.data?.[0];
+          const resolvedUuid = foundBot?.creator_id || foundBot?.creatorId;
+
+          if (resolvedUuid) {
+            profileData = await this.fetchSafeJson(this.getApiUrl(`profiles/${resolvedUuid}`), { headers: this.getHeaders() });
+            botsData = searchRes;
+          } else {
+            throw profErr;
+          }
+        }
+
+        if (profileData && profileData.id && !botsData) {
+          botsData = await this.fetchSafeJson(this.getApiUrl(`characters?user_id[]=${profileData.id}&page=1`), { headers: this.getHeaders() }).catch(() => null);
+        }
+      }
+
+      if (botsData && typeof botsData === 'object') {
+        const total = botsData.total ?? botsData.filtered_total ?? (Array.isArray(botsData.data) ? botsData.data.length : null);
+        if (total !== undefined && total !== null && !isNaN(total)) {
+          profileData.bot_count = Number(total);
+        }
+      }
+
       this.currentProfile = profileData;
       this.renderProfileMeta(profileData);
       this.processBioMarkup(profileData.about_me || "", profileData);
@@ -9703,14 +9747,23 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     const elName = document.getElementById('profile-name');
     const elHandle = document.getElementById('profile-handle');
     const elFoll = document.getElementById('profile-followers');
+    const elBotsWrap = document.getElementById('profile-bots-wrapper');
     const elBots = document.getElementById('profile-bots-count');
     const elAva = document.getElementById('profile-avatar');
     const elBadge = document.getElementById('profile-badge');
+    const elBanner = document.getElementById('profile-banner');
 
     if (elName) elName.innerText = data.user_name || 'Creator';
     if (elHandle) elHandle.innerText = `@${data.user_name || data.id}`;
-    if (elFoll) elFoll.innerText = (data.followers_count || 0).toLocaleString();
-    if (elBots) elBots.innerText = (data.bot_count || data.total_bots || 0).toLocaleString();
+    if (elFoll) elFoll.innerText = Number(data.followers_count || 0).toLocaleString();
+
+    const count = data.bot_count !== undefined ? data.bot_count : data.total_bots;
+    if (count !== undefined && count !== null && !isNaN(count)) {
+      if (elBots) elBots.innerText = Number(count).toLocaleString();
+      if (elBotsWrap) elBotsWrap.style.display = 'block';
+    } else {
+      if (elBotsWrap) elBotsWrap.style.display = 'none';
+    }
 
     let avatar = this.resolveAvatarUrl(data.avatar, 'profile') || DEFAULT_AVATAR;
     if (elAva) {
@@ -9720,6 +9773,17 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
 
     if (elBadge) {
       elBadge.innerHTML = (data.is_verified || data.plusbadge) ? ICONS_SVG.verified : '';
+    }
+
+    if (elBanner) {
+      const bannerImg = data.style?.background_image || '';
+      if (bannerImg) {
+        elBanner.style.backgroundImage = `url("${bannerImg}")`;
+        elBanner.style.backgroundSize = 'cover';
+        elBanner.style.backgroundPosition = 'center';
+      } else {
+        elBanner.style.backgroundImage = '';
+      }
     }
   }
 
