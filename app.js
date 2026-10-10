@@ -1677,14 +1677,74 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
   }
 
   switchCssSubtab(subtab) {
+    if (this.activeCssSubtab === subtab && this._cssSubtabReady) return;
+    this._cssSubtabReady = true;
+
+    const prevSubtab = this.activeCssSubtab || 'code';
     this.activeCssSubtab = subtab;
 
-    ['code', 'html', 'txt', 'preview', 'assets'].forEach(t => {
+    const tabs = ['code', 'preview', 'html', 'txt', 'assets'];
+    tabs.forEach(t => {
       const btn = document.getElementById(`css-subtab-${t}`);
-      const pane = document.getElementById(`css-pane-${t}`);
       if (btn) btn.classList.toggle('is-active', t === subtab);
-      if (pane) pane.style.display = t === subtab ? 'block' : 'none';
     });
+
+    const leavingPane = document.getElementById(`css-pane-${prevSubtab}`);
+    const enteringPane = document.getElementById(`css-pane-${subtab}`);
+
+    if (this._cssSubtabTimeout) clearTimeout(this._cssSubtabTimeout);
+
+    tabs.forEach(t => {
+      if (t !== prevSubtab && t !== subtab) {
+        const p = document.getElementById(`css-pane-${t}`);
+        if (p) {
+          p.style.display = 'none';
+          p.classList.remove('is-fading-out', 'is-fading-in');
+        }
+      }
+    });
+
+    if (subtab === 'preview') {
+      const iframe = document.getElementById('css-preview-iframe');
+      if (iframe && !this.extractedFullDoc) {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const bg = isLight ? '#f4f4f5' : '#09090b';
+        const textH = isLight ? '#18181b' : '#f4f4f6';
+        const textP = isLight ? '#71717a' : '#a1a1aa';
+        const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:60px 20px;background:${bg};color:${textP};font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;}h3{color:${textH};margin-bottom:8px;font-size:16px;}p{font-size:13px;max-width:380px;margin:0 auto;line-height:1.5;}</style></head><body><h3>Profile Live Preview</h3><p>Paste a Janitor profile link above to live preview custom CSS and bio layout.</p></body></html>`;
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeDoc) { iframeDoc.open(); iframeDoc.write(doc); iframeDoc.close(); }
+      }
+    }
+
+    if (!leavingPane || leavingPane === enteringPane || leavingPane.style.display === 'none') {
+      tabs.forEach(t => {
+        const p = document.getElementById(`css-pane-${t}`);
+        if (p) {
+          p.style.display = t === subtab ? 'block' : 'none';
+          p.classList.remove('is-fading-out', 'is-fading-in');
+        }
+      });
+      return;
+    }
+
+    leavingPane.classList.remove('is-fading-in');
+    leavingPane.classList.add('is-fading-out');
+
+    this._cssSubtabTimeout = setTimeout(() => {
+      leavingPane.style.display = 'none';
+      leavingPane.classList.remove('is-fading-out');
+
+      if (enteringPane) {
+        enteringPane.style.display = 'block';
+        enteringPane.classList.remove('is-fading-out');
+        enteringPane.classList.add('is-fading-in');
+        void enteringPane.offsetWidth;
+        requestAnimationFrame(() => {
+          enteringPane.classList.remove('is-fading-in');
+        });
+      }
+    }, 200);
   }
 
   copyActiveCode() {

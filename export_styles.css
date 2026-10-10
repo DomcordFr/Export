@@ -5830,16 +5830,46 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .css-tab-btn:hover {
   color: var(--text-primary);
   background: var(--surface-3);
+  border-color: var(--border-hover);
 }
 .css-tab-btn.is-active {
   color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+[data-theme="light"] .css-tab-btn.is-active {
+  color: #121215;
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* CSS Studio Subtab Panes Smooth Animated Transition */
+.css-pane {
+  opacity: 1;
+  width: 100%;
+  box-sizing: border-box;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.css-pane.is-fading-out {
+  opacity: 0 !important;
+  transform: translateY(-4px) !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.css-pane.is-fading-in {
+  opacity: 0 !important;
+  transform: translateY(4px) !important;
+  transition: none !important;
 }
 
 .css-toolbar-actions {
@@ -6392,9 +6422,16 @@
     align-items: stretch;
     gap: 8px;
   }
-  .css-tabs-row, .css-editor-actions {
+  .css-tabs-row {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .css-editor-actions {
+    width: 100%;
   }
 }
 
