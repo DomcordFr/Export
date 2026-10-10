@@ -5277,7 +5277,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: var(--space-2);
+  width: 100%;
+  box-sizing: border-box;
 }
 .input-label {
   font-size: var(--text-xs);
@@ -5285,6 +5289,7 @@
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  max-width: 100%;
 }
 .input-help-link {
   font-size: var(--text-2xs);
@@ -5295,18 +5300,39 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: var(--radius-full);
   background: var(--surface-2);
   border: 1px solid var(--border);
   transition: all var(--duration-fast) var(--ease-out);
   user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .input-help-link:hover {
   color: var(--text-primary);
   background: var(--surface-hover);
   border-color: var(--border-hover);
   text-decoration: none !important;
+}
+
+@media (max-width: 480px) {
+  .input-label-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .input-label {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .input-help-link {
+    font-size: 10.5px;
+    padding: 2px 7px;
+  }
 }
 
 .token-input-wrap {
@@ -6723,11 +6749,13 @@ main.container {
   justify-content: center;
   gap: var(--space-2);
   width: 100%;
-  padding-top: var(--space-3);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: var(--space-2);
+  border: none !important;
+  border-top: none !important;
 }
 [data-theme="light"] .footer-bottom-row {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border: none !important;
+  border-top: none !important;
 }
 @media (min-width: 768px) {
   .footer-bottom-row {
@@ -7035,90 +7063,126 @@ main.container {
   justify-content: center;
 }
 
-.splash-deck {
+/* 3D Isometric Stacked Chips Stage */
+.splash-chips-stage {
   position: relative;
-  width: 150px;
-  height: 120px;
+  width: 120px;
+  height: 110px;
   margin: 0 auto var(--space-6);
-  perspective: 800px;
-}
-
-.splash-card {
-  position: absolute;
-  width: 64px;
-  height: 94px;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  bottom: 12px;
-  left: calc(50% - 32px);
-  transform-origin: 50% 90%;
-  will-change: transform, opacity, box-shadow;
+  perspective: 900px;
+  transform-style: preserve-3d;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.splash-card-inner {
+.stacked-chip {
+  position: absolute;
+  width: 90px;
+  height: 32px;
+  border-radius: 9999px;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, box-shadow;
+  transition: transform 0.4s ease;
+}
+
+.chip-inner {
   width: 100%;
   height: 100%;
   border-radius: inherit;
   position: relative;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.splash-card-left {
-  background: linear-gradient(145deg, #18181b 0%, #0c0c0e 100%);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
-  z-index: 1;
-  animation: splashLeftCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+.chip-core {
+  width: 60%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.splash-card-center {
-  background: linear-gradient(145deg, #222226 0%, #121215 100%);
-  border-color: #ffffff;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 255, 255, 0.14);
+.chip-sheen {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: chipSheenScan 2.4s ease-in-out infinite;
+}
+
+@keyframes chipSheenScan {
+  0%, 30% { left: -100%; }
+  70%, 100% { left: 160%; }
+}
+
+/* Top Chip */
+.chip-top {
   z-index: 3;
-  animation: splashCenterCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: chipStackTop 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.chip-top .chip-inner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(30, 30, 36, 0.95) 100%);
+  border-color: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.25);
+}
+.chip-top .chip-core {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
-.splash-card-right {
-  background: linear-gradient(145deg, #18181b 0%, #0c0c0e 100%);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+/* Middle Chip */
+.chip-mid {
   z-index: 2;
-  animation: splashRightCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: chipStackMid 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.chip-mid .chip-inner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(20, 20, 24, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
 }
 
-@keyframes splashLeftCard {
+/* Bottom Chip */
+.chip-bot {
+  z-index: 1;
+  animation: chipStackBot 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.chip-bot .chip-inner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(12, 12, 14, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.9);
+}
+
+@keyframes chipStackTop {
   0%, 100% {
-    transform: rotate(-14deg) translate(-14px, 2px);
-    opacity: 0.75;
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(-14px) translateZ(18px);
   }
   50% {
-    transform: rotate(-24deg) translate(-28px, 6px) scale(0.96);
-    opacity: 0.95;
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(-32px) translateZ(48px);
   }
 }
 
-@keyframes splashCenterCard {
+@keyframes chipStackMid {
   0%, 100% {
-    transform: translateY(-4px) scale(1);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.12);
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(0px) translateZ(0px);
   }
   50% {
-    transform: translateY(-16px) scale(1.08);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.95), 0 0 32px rgba(255, 255, 255, 0.25);
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(0px) translateZ(0px) scale(1.03);
   }
 }
 
-@keyframes splashRightCard {
+@keyframes chipStackBot {
   0%, 100% {
-    transform: rotate(14deg) translate(14px, 2px);
-    opacity: 0.75;
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(14px) translateZ(-18px);
   }
   50% {
-    transform: rotate(24deg) translate(28px, 6px) scale(0.96);
-    opacity: 0.95;
+    transform: rotateX(52deg) rotateZ(-15deg) translateY(28px) translateZ(-42px);
   }
 }
 
@@ -7170,20 +7234,23 @@ main.container {
 [data-theme="light"] .splash-title {
   color: #121215;
 }
-[data-theme="light"] .splash-card-left {
-  background: linear-gradient(145deg, #FFFFFF 0%, #F1F3F5 100%);
-  border-color: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
-[data-theme="light"] .splash-card-center {
-  background: #FFFFFF;
+[data-theme="light"] .chip-top .chip-inner {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F1F3F5 100%);
   border-color: #121215;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14), 0 0 16px rgba(0, 0, 0, 0.06);
 }
-[data-theme="light"] .splash-card-right {
-  background: linear-gradient(145deg, #FFFFFF 0%, #F1F3F5 100%);
-  border-color: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+[data-theme="light"] .chip-top .chip-core {
+  background: #18181B;
+}
+[data-theme="light"] .chip-mid .chip-inner {
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .chip-bot .chip-inner {
+  background: linear-gradient(135deg, #F1F3F5 0%, #DEE2E6 100%);
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
 }
 [data-theme="light"] .splash-meter {
   background: rgba(0, 0, 0, 0.08);
