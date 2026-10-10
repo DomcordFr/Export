@@ -1469,7 +1469,7 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
-      this.showToast("Please enter a Janitor profile link, @handle, or paste raw CSS/bio markup", "error");
+      this.showToast("Please enter a Janitor profile link or @username", "error");
       input.focus();
       return;
     }

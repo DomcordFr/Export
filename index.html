@@ -7587,7 +7587,7 @@ main.container {
               type="text" 
               id="css-profile-input" 
               class="profile-input-field" 
-              placeholder="Paste Janitor profile link, @handle, or raw CSS / HTML bio markup..." 
+              placeholder="Paste Janitor profile link or @username..." 
               autocomplete="off" 
               spellcheck="false" 
               oninput="app.onProfileInputChange()" 
@@ -7634,9 +7634,8 @@ main.container {
 
         <div class="profile-input-hints">
           <span class="hint-tag">Supported:</span>
-          <span class="hint-chip" onclick="app.setProfileUrl('janitorai.com/profiles/TheBoys')"><code>janitorai.com/profiles/...</code></span>
-          <span class="hint-chip" onclick="app.setProfileUrl('@TheBoys')"><code>@handle</code></span>
-          <span class="hint-chip"><code>Raw Bio / CSS</code></span>
+          <span class="hint-chip" onclick="document.getElementById('css-profile-input')?.focus()"><code>JanitorAi Profile link</code></span>
+          <span class="hint-chip" onclick="document.getElementById('css-profile-input')?.focus()"><code>@Username</code></span>
         </div>
       </div>
 
@@ -9500,7 +9499,7 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
-      this.showToast("Please enter a Janitor profile link, @handle, or paste raw CSS/bio markup", "error");
+      this.showToast("Please enter a Janitor profile link or @username", "error");
       input.focus();
       return;
     }
