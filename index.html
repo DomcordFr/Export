@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Export — JanitorAI Vault Exporter & Profile CSS Studio</title>
+  <title>Export — Janitor Vault Exporter & Profile CSS Studio</title>
   
-  <meta name="title" content="Export — JanitorAI Vault Exporter & Profile CSS Studio">
-  <meta name="description" content="Export JanitorAI public & private bots, lorebooks, and personas into SillyTavern V2 cards. Extract profile CSS in 1 click. 100% in-memory client-side.">
+  <meta name="title" content="Export — Janitor Vault Exporter & Profile CSS Studio">
+  <meta name="description" content="Export public & unlisted bots, lorebooks, and personas into SillyTavern V2 cards. Extract profile CSS in 1 click. 100% in-memory client-side.">
   <meta name="theme-color" content="#09090b">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://export.domcord.org/">
   <meta property="og:site_name" content="Export">
-  <meta property="og:title" content="Export — JanitorAI Vault Exporter & Profile CSS Studio">
-  <meta property="og:description" content="Complete luxury JanitorAI backup suite: SillyTavern V2 PNG card compilation, lorebooks, personas, and live profile CSS extractor.">
+  <meta property="og:title" content="Export — Janitor Vault Exporter & Profile CSS Studio">
+  <meta property="og:description" content="Complete luxury Janitor backup suite: SillyTavern V2 PNG card compilation, lorebooks, personas, and live profile CSS extractor.">
 
   <!-- Geist Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5633,20 +5633,424 @@
   white-space: nowrap;
 }
 
-  </style>
-</head>
 
+/* ==========================================================================
+   BESPOKE EXPORT BRAND SVG LOGO & HOVER DYNAMICS
+   ========================================================================== */
+.export-brand-logo {
+  width: 28px;
+  height: 28px;
+  overflow: visible;
+  flex-shrink: 0;
+  color: var(--text-primary);
+  display: block;
+}
+.export-brand-logo .logo-card-back {
+  transform-origin: 16px 26px;
+  transform: rotate(-12deg) translate(-2px, 0.5px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.export-brand-logo .logo-card-mid {
+  transform-origin: 16px 26px;
+  transform: rotate(12deg) translate(2px, 0.5px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.export-brand-logo .logo-card-front {
+  transform-origin: 16px 26px;
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.logo-container:hover .export-brand-logo .logo-card-back {
+  transform: rotate(-24deg) translate(-5px, 0);
+}
+.logo-container:hover .export-brand-logo .logo-card-mid {
+  transform: rotate(24deg) translate(5px, 0);
+}
+.logo-container:hover .export-brand-logo .logo-card-front {
+  transform: translateY(-4px) scale(1.05);
+}
+
+/* ==========================================================================
+   MOBILE SEGMENTED CONTROLS & ERGONOMIC TOUCH TARGETS
+   ========================================================================== */
+.mobile-nav-bar {
+  display: none;
+}
+@media (max-width: 768px) {
+  .nav-desktop-links {
+    display: none !important;
+  }
+  .security-chip-text {
+    display: none !important;
+  }
+  .security-chip {
+    padding: 4px 6px !important;
+  }
+  .mobile-nav-bar {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin: var(--space-3) auto var(--space-2);
+    width: 100%;
+    max-width: 480px;
+  }
+  .mobile-nav-btn {
+    flex: 1;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .mobile-nav-btn.is-active {
+    background: var(--surface-3);
+    color: var(--text-primary);
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ==========================================================================
+   CUSTOM LUXURY SCOPE SWITCHES (ZERO BROWSER DEFAULT CONTROLS)
+   ========================================================================== */
+.scope-toggle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.scope-toggle-card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-hover);
+}
+.scope-toggle-card:active {
+  transform: scale(0.98);
+}
+.scope-toggle-card.is-checked {
+  background: var(--surface-3);
+  border-color: var(--border-active);
+}
+.scope-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.scope-toggle-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.scope-toggle-card.is-checked .scope-toggle-title {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.custom-switch {
+  width: 32px;
+  height: 18px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: all var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+.custom-switch-knob {
+  width: 12px;
+  height: 12px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+.scope-toggle-card.is-checked .custom-switch {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.scope-toggle-card.is-checked .custom-switch-knob {
+  background: var(--text-inverse);
+  transform: translateX(14px);
+}
+
+/* ==========================================================================
+   SKELETON CARDS & ANIMATED SHIMMERS
+   ========================================================================== */
+.bot-card-skeleton {
+  aspect-ratio: 9 / 16;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+}
+.bot-card-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: skeletonShimmer 1.8s infinite;
+}
+
+/* ==========================================================================
+   DOWNLOAD POPUP MODAL ENHANCEMENTS
+   ========================================================================== */
+.download-preview-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+}
+.download-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: var(--space-3) 0 var(--space-4);
+  position: relative;
+  border: 1px solid var(--border);
+}
+.download-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.download-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: skeletonShimmer 1.4s infinite;
+}
+.download-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+.download-step-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.download-step-row.is-active {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.download-step-row.is-done {
+  color: var(--text-secondary);
+}
+.download-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.download-step-row.is-active .download-step-dot {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--surface-3);
+}
+.download-step-row.is-done .download-step-dot {
+  background: var(--surface-2);
+  border-color: var(--success);
+  color: var(--success);
+}
+.modal-state-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-state-circle.is-success {
+  background: var(--success-tint);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  transform: scale(1.1);
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS OVERRIDES
+   ========================================================================== */
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+  .vault-hero {
+    padding: var(--space-4) 0 var(--space-3);
+  }
+  .vault-title {
+    font-size: 1.4rem;
+    line-height: 1.25;
+  }
+  .vault-subtitle {
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-4);
+    padding: 0 var(--space-2);
+  }
+  .auth-panel-card {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+  }
+  .scope-selectors-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: var(--space-4);
+  }
+  .scope-toggle-card {
+    padding: 10px 10px;
+  }
+  .token-input-field {
+    height: 42px;
+    font-size: 11px;
+    padding-right: 76px;
+  }
+  .token-micro-btn {
+    height: 30px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+  .auth-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .auth-action-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn-primary-glow, .btn-secondary-flat {
+    width: 100%;
+    justify-content: center;
+  }
+  .bot-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .bot-card-content-area {
+    padding: 8px 8px;
+    gap: 3px;
+  }
+  .bot-card-title {
+    font-size: 12px;
+  }
+  .bot-card-creator {
+    font-size: 10px;
+  }
+  .bot-card-creator-avatar {
+    width: 14px;
+    height: 14px;
+  }
+  .bot-card-stat-pills-row {
+    gap: 4px;
+  }
+  .bot-card-stat-pill {
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+  .vault-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .vault-toolbar-left, .vault-toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .css-search-bar {
+    flex-direction: column;
+    width: 100%;
+  }
+  .css-search-input {
+    width: 100%;
+  }
+  .profile-meta-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .profile-meta-avatar {
+    width: 64px;
+    height: 64px;
+  }
+  .profile-meta-info {
+    padding-top: 8px;
+    width: 100%;
+  }
+  .profile-meta-name {
+    justify-content: center;
+  }
+  .css-editor-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .css-tabs-row, .css-editor-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+  </style>
 </head>
 <body>
   <!-- APP HEADER -->
   <header class="app-header">
     <div class="container header-inner">
-      <!-- Left: Iconic 3-Card Fanned Logo -->
+      <!-- Left: Bespoke Custom Export SVG Logo -->
       <div class="logo-container" onclick="app.switchTab('vault')">
-        <svg class="cards-logo-svg" viewBox="0 0 28 28" fill="none">
-          <rect class="card-l" x="3.5" y="6.5" width="12" height="16.5" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="var(--surface-2)" opacity="0.6" />
-          <rect class="card-r" x="12.5" y="6.5" width="12" height="16.5" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="var(--surface-3)" opacity="0.8" />
-          <rect class="card-m" x="8" y="4.5" width="12" height="18.5" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="var(--surface-1)" />
+        <svg class="export-brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect class="logo-card-back" x="3.5" y="7" width="15" height="20" rx="2.8" stroke="currentColor" stroke-width="1.5" fill="var(--surface-2)" opacity="0.55" />
+          <rect class="logo-card-mid" x="13.5" y="7" width="15" height="20" rx="2.8" stroke="currentColor" stroke-width="1.5" fill="var(--surface-3)" opacity="0.75" />
+          <g class="logo-card-front">
+            <rect x="8.5" y="4" width="15" height="21" rx="2.8" stroke="currentColor" stroke-width="1.7" fill="var(--surface-1)" />
+            <path d="M16 8.5V15M16 8.5L13.2 11.3M16 8.5L18.8 11.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12.5 17.5H19.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" />
+          </g>
         </svg>
         <span>Export</span>
       </div>
@@ -5654,7 +6058,7 @@
       <!-- Center: Desktop Nav Links -->
       <nav class="nav-desktop-links">
         <button class="nav-link-btn is-active" id="nav-btn-vault" onclick="app.switchTab('vault')">
-          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" x2="3"/></svg>
           Backup Vault
         </button>
         <button class="nav-link-btn" id="nav-btn-css" onclick="app.switchTab('css')">
@@ -5670,7 +6074,8 @@
       <!-- Right: Actions & Theme Toggle -->
       <div class="header-actions">
         <span class="security-chip" title="Zero data is stored on any server or disk">
-          <span class="pulse-dot"></span> In-Memory Zero-Storage
+          <span class="pulse-dot"></span>
+          <span class="security-chip-text">In-Memory Zero-Storage</span>
         </span>
         <button class="icon-action-btn" onclick="app.toggleTheme()" aria-label="Toggle Theme" title="Toggle Theme">
           <span id="theme-icon-slot">
@@ -5684,14 +6089,30 @@
   <!-- MAIN WRAPPER -->
   <main class="container" style="padding-bottom: var(--space-16);">
 
+    <!-- MOBILE SEGMENTED CONTROL -->
+    <div class="mobile-nav-bar">
+      <button class="mobile-nav-btn is-active" id="m-nav-btn-vault" onclick="app.switchTab('vault')">
+        <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" x2="3"/></svg>
+        Vault
+      </button>
+      <button class="mobile-nav-btn" id="m-nav-btn-css" onclick="app.switchTab('css')">
+        <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        CSS Studio
+      </button>
+      <button class="mobile-nav-btn" id="m-nav-btn-demo" onclick="app.loadDemoVault()">
+        <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Demo
+      </button>
+    </div>
+
     <!-- ========================================== -->
     <!-- VIEW 1: BACKUP VAULT -->
     <!-- ========================================== -->
     <section id="view-vault">
       <div class="vault-hero">
-        <h1 class="vault-title">Export JanitorAI Characters & Vault</h1>
+        <h1 class="vault-title">Export Character Cards & Vault</h1>
         <p class="vault-subtitle">
-          Export your public and private bots, lorebooks, and personas into importable SillyTavern V2 PNG character cards. 100% client-side compilation in memory.
+          Export your public and private characters, lorebooks, and personas into importable SillyTavern V2 PNG character cards. 100% client-side compilation in volatile memory.
         </p>
 
         <!-- TOKEN & SCOPE CONFIGURATION PANEL -->
@@ -5702,7 +6123,7 @@
           </div>
 
           <div class="token-input-wrap">
-            <input type="password" id="token-input" class="token-input-field" placeholder="Paste your JanitorAI Supabase JWT token (eyJhbGci...)" autocomplete="off" spellcheck="false" oninput="app.onTokenInput()">
+            <input type="password" id="token-input" class="token-input-field" placeholder="Paste your Supabase JWT token (eyJhbGci...)" autocomplete="off" spellcheck="false" oninput="app.onTokenInput()">
             <div class="token-input-actions">
               <button class="token-micro-btn" id="btn-toggle-eye" onclick="app.toggleTokenVisibility()" title="Show/Hide token">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -5714,24 +6135,51 @@
             </div>
           </div>
 
-          <!-- Scope Selection Chips -->
+          <!-- Custom Luxury Scope Selection Cards -->
           <div class="scope-selectors-row">
-            <label class="scope-toggle-label">
-              <input type="checkbox" id="scope-public" checked>
-              <span class="scope-toggle-text">Public Bots</span>
-            </label>
-            <label class="scope-toggle-label">
-              <input type="checkbox" id="scope-private" checked>
-              <span class="scope-toggle-text">Private / Unlisted</span>
-            </label>
-            <label class="scope-toggle-label">
-              <input type="checkbox" id="scope-lorebooks" checked>
-              <span class="scope-toggle-text">Lorebooks</span>
-            </label>
-            <label class="scope-toggle-label">
-              <input type="checkbox" id="scope-personas" checked>
-              <span class="scope-toggle-text">Personas</span>
-            </label>
+            <div class="scope-toggle-card is-checked" id="scope-card-public" onclick="app.toggleScope('public')">
+              <div class="scope-toggle-info">
+                <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="scope-toggle-title">Public Bots</span>
+              </div>
+              <div class="custom-switch">
+                <div class="custom-switch-knob"></div>
+              </div>
+              <input type="checkbox" id="scope-public" checked style="display: none;">
+            </div>
+
+            <div class="scope-toggle-card is-checked" id="scope-card-private" onclick="app.toggleScope('private')">
+              <div class="scope-toggle-info">
+                <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span class="scope-toggle-title">Private / Unlisted</span>
+              </div>
+              <div class="custom-switch">
+                <div class="custom-switch-knob"></div>
+              </div>
+              <input type="checkbox" id="scope-private" checked style="display: none;">
+            </div>
+
+            <div class="scope-toggle-card is-checked" id="scope-card-lorebooks" onclick="app.toggleScope('lorebooks')">
+              <div class="scope-toggle-info">
+                <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="scope-toggle-title">Lorebooks</span>
+              </div>
+              <div class="custom-switch">
+                <div class="custom-switch-knob"></div>
+              </div>
+              <input type="checkbox" id="scope-lorebooks" checked style="display: none;">
+            </div>
+
+            <div class="scope-toggle-card is-checked" id="scope-card-personas" onclick="app.toggleScope('personas')">
+              <div class="scope-toggle-info">
+                <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span class="scope-toggle-title">Personas</span>
+              </div>
+              <div class="custom-switch">
+                <div class="custom-switch-knob"></div>
+              </div>
+              <input type="checkbox" id="scope-personas" checked style="display: none;">
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -5743,20 +6191,19 @@
               </button>
               <button class="btn-secondary-flat" onclick="app.loadDemoVault()">
                 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <span>Load Sample Demo (12 Cards)</span>
+                <span>Load Sample Demo (4 Cards)</span>
               </button>
             </div>
             <div style="font-size: var(--text-2xs); color: var(--text-muted); line-height: 1.4;">
-              Purely client-side • Zero telemetry • Never stored on disk
+              Purely client-side • Zero telemetry • Never saved on disk
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PROGRESS & DECK LOADER (CARDS AUTHENTIC ANIMATION) -->
+      <!-- SCAN PROGRESS & DECK LOADER -->
       <div id="unmask-progress-box" class="unmask-progress-box" style="display: none; max-width: 720px; margin: 0 auto var(--space-8);">
         <div class="card-loading-stage">
-          <!-- 3-Card Fanning Animation -->
           <div class="deck-loader">
             <div class="deck-card deck-card-1"></div>
             <div class="deck-card deck-card-2"></div>
@@ -5765,10 +6212,10 @@
 
           <div class="card-loading-meta">
             <div class="card-loading-title-row">
-              <span class="card-loading-title" id="loader-title">Exporting Vault</span>
+              <span class="card-loading-title" id="loader-title">Scanning Vault</span>
               <span class="card-loading-pct" id="loader-pct">0%</span>
             </div>
-            <div class="card-loading-sub" id="loader-sub">Connecting to JanitorAI gateway...</div>
+            <div class="card-loading-sub" id="loader-sub">Connecting to gateway...</div>
           </div>
         </div>
 
@@ -5846,7 +6293,7 @@
       <div class="vault-hero">
         <h1 class="vault-title">Profile CSS Studio</h1>
         <p class="vault-subtitle">
-          Extract, beautify, and preview custom CSS styling from any JanitorAI creator profile in real time. Download pure <code>.css</code> files and inspect styling architecture.
+          Extract, beautify, and preview custom CSS styling from any Janitor creator profile in real time. Download pure <code>.css</code> files and inspect styling architecture.
         </p>
 
         <!-- Search Input -->
@@ -5966,12 +6413,86 @@
   </div>
 
   <!-- ========================================== -->
+  <!-- MODAL: DEDICATED DOWNLOADING POPUP & PROGRESS -->
+  <!-- ========================================== -->
+  <div id="download-progress-modal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-dialog-header">
+        <div class="modal-dialog-title" id="dl-modal-title">Compiling SillyTavern Card</div>
+        <button class="icon-action-btn" onclick="app.closeDownloadModal()" id="dl-modal-close-btn">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-dialog-body" style="padding: var(--space-5);">
+        <!-- Item Preview Bar -->
+        <div class="download-modal-preview">
+          <img id="dl-preview-thumb" class="download-preview-thumb" src="" alt="Thumbnail">
+          <div class="download-preview-meta">
+            <div id="dl-preview-name" class="download-preview-name">Character Name</div>
+            <div id="dl-preview-sub" class="download-preview-tag">SillyTavern V2 PNG • Chara Chunk</div>
+          </div>
+        </div>
+
+        <!-- Center Animation: Deck Loader OR Success Circle -->
+        <div id="dl-animation-stage" style="display: flex; justify-content: center; margin: var(--space-4) 0;">
+          <div class="deck-loader" id="dl-deck-loader">
+            <div class="deck-card deck-card-1"></div>
+            <div class="deck-card deck-card-2"></div>
+            <div class="deck-card deck-card-3"></div>
+          </div>
+          <div class="modal-state-circle is-success" id="dl-success-icon" style="display: none; margin: 0 auto;">
+            <svg class="ui-icon" style="width: 28px; height: 28px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+
+        <!-- Percentage and Subtitle -->
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+          <span id="dl-status-text" style="font-size: var(--text-xs); font-weight: 600; color: var(--text-primary);">Resolving character...</span>
+          <span id="dl-pct-text" style="font-size: var(--text-xs); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-secondary); background: var(--surface-2); padding: 2px 8px; border-radius: var(--radius-full); border: 1px solid var(--border);">0%</span>
+        </div>
+
+        <!-- Shimmer Progress Track -->
+        <div class="download-progress-track">
+          <div class="download-progress-fill" id="dl-progress-fill" style="width: 0%;"></div>
+        </div>
+
+        <!-- Stepper Checklist -->
+        <div class="download-steps-list">
+          <div class="download-step-row is-active" id="dl-step-1">
+            <div class="download-step-dot" id="dl-dot-1">1</div>
+            <span>Fetch character definition & alternate greetings</span>
+          </div>
+          <div class="download-step-row" id="dl-step-2">
+            <div class="download-step-dot" id="dl-dot-2">2</div>
+            <span>Convert avatar to lossless PNG canvas</span>
+          </div>
+          <div class="download-step-row" id="dl-step-3">
+            <div class="download-step-dot" id="dl-dot-3">3</div>
+            <span>Inject SillyTavern V2 chara chunk & CRC32</span>
+          </div>
+          <div class="download-step-row" id="dl-step-4">
+            <div class="download-step-dot" id="dl-dot-4">4</div>
+            <span>Trigger browser download</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-dialog-footer" id="dl-modal-footer" style="display: none;">
+        <button class="btn-primary-glow" onclick="app.closeDownloadModal()" style="width: 100%; justify-content: center;">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
   <!-- MODAL: TOKEN HELP -->
   <!-- ========================================== -->
   <div id="token-help-modal" class="modal-backdrop">
     <div class="modal-dialog" style="max-width: 520px;">
       <div class="modal-dialog-header">
-        <div class="modal-dialog-title">How to get your JanitorAI token</div>
+        <div class="modal-dialog-title">How to get your Janitor session token</div>
         <button class="icon-action-btn" onclick="app.closeTokenHelp()">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -5996,17 +6517,14 @@
   <!-- TOAST NOTIFICATIONS CONTAINER -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- ========================================== -->
   <!-- JAVASCRIPT ENGINE -->
-  <!-- ========================================== -->
-  
   <script>
 /* ==========================================================================
    EXPORT SUITE — JAVASCRIPT ENGINE (CARDS DESIGN SYSTEM PARITY)
    Pure client-side in-memory zero-storage architecture.
    ========================================================================== */
 
-// 1. CRC32 Table & Computation
+// 1. CRC32 Computation Engine
 const CRC_TABLE = new Uint32Array(256);
 for (let i = 0; i < 256; i++) {
   let c = i;
@@ -6024,7 +6542,7 @@ function calculateCrc32(bytes) {
   return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-// 2. Icons definitions
+// 2. Icon SVGs
 const ICONS_SVG = {
   chat: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   token: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5H9.5a2.5 2.5 0 0 0 0 5H15"/></svg>',
@@ -6048,11 +6566,11 @@ class ExportApp {
   }
 
   init() {
-    // Theme initialization
+    // 1. Initialize Theme
     const savedTheme = localStorage.getItem('export_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Restore token if in session storage
+    // 2. Restore token from session memory if present
     const savedTok = sessionStorage.getItem('export_session_jwt');
     if (savedTok) {
       this.token = savedTok;
@@ -6060,7 +6578,7 @@ class ExportApp {
       if (input) input.value = savedTok;
     }
 
-    // Load sample cards for luxury immediate rendering
+    // 3. Load initial sample cards immediately
     this.loadDemoVault();
   }
 
@@ -6074,15 +6592,35 @@ class ExportApp {
 
   switchTab(tab) {
     this.activeTab = tab;
+
+    // Desktop nav buttons
     const btnVault = document.getElementById('nav-btn-vault');
     const btnCss = document.getElementById('nav-btn-css');
     if (btnVault) btnVault.classList.toggle('is-active', tab === 'vault');
     if (btnCss) btnCss.classList.toggle('is-active', tab === 'css');
+
+    // Mobile nav buttons
+    const mBtnVault = document.getElementById('m-nav-btn-vault');
+    const mBtnCss = document.getElementById('m-nav-btn-css');
+    if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
+    if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
+
+    // Views
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
     if (viewVault) viewVault.style.display = tab === 'vault' ? 'block' : 'none';
     if (viewCss) viewCss.style.display = tab === 'css' ? 'block' : 'none';
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  toggleScope(scopeId) {
+    const input = document.getElementById(`scope-${scopeId}`);
+    const card = document.getElementById(`scope-card-${scopeId}`);
+    if (input && card) {
+      input.checked = !input.checked;
+      card.classList.toggle('is-checked', input.checked);
+    }
   }
 
   onTokenInput() {
@@ -6232,7 +6770,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     SCAN ACCOUNT (JANITOR API)
+     SCAN ACCOUNT (WITH ANIMATED SKELETON CARDS)
      ========================================================================== */
   async scanAccount() {
     if (!this.token) {
@@ -6246,6 +6784,12 @@ class ExportApp {
     if (scanBtn) {
       scanBtn.disabled = true;
       scanBtn.innerHTML = `<span>Connecting to Hampter...</span>`;
+    }
+
+    // Render skeleton placeholders in the grid
+    const grid = document.getElementById('bot-cards-grid');
+    if (grid) {
+      grid.innerHTML = Array.from({ length: 6 }, () => '<div class="bot-card-skeleton"></div>').join('');
     }
 
     this.showProgress(true, "Scanning Vault", 10, "Validating token & fetching creator profile...", 1);
@@ -6291,7 +6835,7 @@ class ExportApp {
         }
       }
 
-      // 2. Fetch Lorebooks / Scripts
+      // 2. Fetch Lorebooks
       if (incLorebooks && userId) {
         this.updateProgress(50, "Fetching lorebooks and scripts...", 2);
         try {
@@ -6356,7 +6900,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     RENDER VAULT & BOT CARDS
+     RENDER VAULT & 9:16 BOT CARDS
      ========================================================================== */
   renderVault() {
     const toolbar = document.getElementById('vault-toolbar-section');
@@ -6508,7 +7052,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     DETAIL MODAL & SINGLE DOWNLOAD
+     DETAIL MODAL
      ========================================================================== */
   openDetailModal(id) {
     const bot = this.items.find(b => b.id === id);
@@ -6556,45 +7100,142 @@ class ExportApp {
     }
   }
 
+  /* ==========================================================================
+     AUTHENTIC DOWNLOAD POPUP MODAL CONTROLLER
+     ========================================================================== */
+  openDownloadModal(title, thumb, name, sub) {
+    const modal = document.getElementById('download-progress-modal');
+    if (!modal) return;
+
+    document.getElementById('dl-modal-title').innerText = title;
+    document.getElementById('dl-preview-thumb').src = thumb || DEFAULT_AVATAR;
+    document.getElementById('dl-preview-name').innerText = name || 'Item';
+    document.getElementById('dl-preview-sub').innerText = sub || 'SillyTavern V2 PNG • Chara Chunk';
+
+    // Reset animations
+    document.getElementById('dl-deck-loader').style.display = 'block';
+    document.getElementById('dl-success-icon').style.display = 'none';
+    document.getElementById('dl-modal-footer').style.display = 'none';
+    document.getElementById('dl-progress-fill').style.width = '0%';
+    document.getElementById('dl-pct-text').innerText = '0%';
+
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) {
+        stepRow.classList.toggle('is-active', i === 1);
+        stepRow.classList.remove('is-done');
+      }
+    }
+
+    modal.classList.add('is-active');
+  }
+
+  updateDownloadModal(pct, statusText, activeStep) {
+    const elFill = document.getElementById('dl-progress-fill');
+    const elPct = document.getElementById('dl-pct-text');
+    const elStatus = document.getElementById('dl-status-text');
+
+    if (elFill) elFill.style.width = `${pct}%`;
+    if (elPct) elPct.innerText = `${pct}%`;
+    if (elStatus) elStatus.innerText = statusText;
+
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) {
+        stepRow.classList.toggle('is-active', i === activeStep);
+        stepRow.classList.toggle('is-done', i < activeStep);
+      }
+    }
+  }
+
+  completeDownloadModal(headline, sub) {
+    this.updateDownloadModal(100, headline || "Download complete!", 4);
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) stepRow.classList.add('is-done');
+    }
+
+    // Switch Deck Loader to Animated Success Circle
+    document.getElementById('dl-deck-loader').style.display = 'none';
+    document.getElementById('dl-success-icon').style.display = 'flex';
+    document.getElementById('dl-preview-sub').innerText = sub || 'Ready for SillyTavern';
+    document.getElementById('dl-modal-footer').style.display = 'flex';
+  }
+
+  closeDownloadModal() {
+    const modal = document.getElementById('download-progress-modal');
+    if (modal) modal.classList.remove('is-active');
+  }
+
+  /* ==========================================================================
+     SINGLE CARD DOWNLOAD (WIRED TO DOWNLOAD POPUP MODAL)
+     ========================================================================== */
   async downloadSingleCard(id) {
     const bot = this.items.find(b => b.id === id);
     if (!bot) return;
 
-    this.showToast(`Compiling SillyTavern V2 card for "${bot.name}"...`);
+    let avatarUrl = bot.avatar || DEFAULT_AVATAR;
+    if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
+      avatarUrl = `https://ella.janitorai.com/bot-avatars/${avatarUrl}`;
+    }
+
+    const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+
+    // 1. Open the luxury download popup modal!
+    this.openDownloadModal(
+      "Compiling Character Card",
+      avatarUrl,
+      bot.name,
+      bot._type === 'character' ? "SillyTavern V2 PNG • Chara Chunk" : `${bot.category} JSON`
+    );
+
     try {
-      const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+      // Step 1: Resolve Metadata & Greetings
+      this.updateDownloadModal(25, "Resolving character metadata & greetings...", 1);
+      await new Promise(r => setTimeout(r, 260));
 
       if (bot._type === 'lorebook') {
+        this.updateDownloadModal(70, "Packaging Lorebook JSON...", 3);
+        await new Promise(r => setTimeout(r, 200));
         const jsonStr = JSON.stringify(bot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_lorebook.json`);
-        this.showToast(`Downloaded lorebook "${bot.name}"`);
+        this.completeDownloadModal("Lorebook Exported!", "JSON file ready");
         return;
       }
 
       if (bot._type === 'persona') {
+        this.updateDownloadModal(70, "Packaging Persona JSON...", 3);
+        await new Promise(r => setTimeout(r, 200));
         const jsonStr = JSON.stringify(bot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
-        this.showToast(`Downloaded persona "${bot.name}"`);
+        this.completeDownloadModal("Persona Exported!", "JSON file ready");
         return;
       }
 
-      let avatarUrl = bot.avatar;
-      if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
-        avatarUrl = `https://ella.janitorai.com/bot-avatars/${avatarUrl}`;
-      }
-
+      // Step 2: Convert avatar to lossless PNG canvas
+      this.updateDownloadModal(55, "Fetching & converting high-res avatar to PNG...", 2);
       const cardV2 = this.buildSillyTavernV2Card(bot);
+
+      // Step 3: Inject SillyTavern V2 chara chunk & CRC32
+      this.updateDownloadModal(82, "Embedding SillyTavern V2 chara chunk & CRC32...", 3);
       const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
+
+      // Step 4: Deliver file download
+      this.updateDownloadModal(100, "Delivering SillyTavern card download...", 4);
       this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
-      this.showToast(`Downloaded "${bot.name}" character card!`);
+
+      this.completeDownloadModal("Card Download Complete!", "SillyTavern V2 PNG • Ready to import");
+      this.showToast(`Downloaded "${bot.name}" card!`);
+
     } catch (err) {
       console.error("Single download error:", err);
+      this.updateDownloadModal(100, `Download error: ${err.message}`, 4);
       this.showToast(`Error compiling card: ${err.message}`, "error");
     }
   }
 
   /* ==========================================================================
-     BATCH ZIP EXPORTER
+     BATCH EXPORT SELECTED AS ZIP (WIRED TO DOWNLOAD POPUP MODAL)
      ========================================================================== */
   async exportSelectedZip() {
     const selected = this.items.filter(b => this.selectedIds.has(b.id));
@@ -6608,7 +7249,13 @@ class ExportApp {
       return;
     }
 
-    this.showProgress(true, "Building SillyTavern Vault Zip", 5, "Preparing zip archive...", 1);
+    const total = selected.length;
+    this.openDownloadModal(
+      "Compiling SillyTavern Vault (.zip)",
+      selected[0]?.avatar || DEFAULT_AVATAR,
+      `Vault Archive (${total} Items)`,
+      "SillyTavern Characters & World Info"
+    );
 
     try {
       const zip = new JSZip();
@@ -6616,14 +7263,12 @@ class ExportApp {
       const loreFolder = zip.folder("lorebooks");
       const persFolder = zip.folder("personas");
 
-      const total = selected.length;
       let done = 0;
-
       for (const item of selected) {
         const safeName = (item.name || "item").replace(/[/\\?%*:|"<>]/g, "_").trim();
         const pct = Math.round(((done + 1) / total) * 80);
 
-        this.updateProgress(pct, `Processing ${item.name} (${done + 1}/${total})...`, 3);
+        this.updateDownloadModal(pct, `Compiling ${done + 1} of ${total}: ${item.name}...`, 2);
 
         if (item._type === 'lorebook') {
           loreFolder.file(`${safeName}.json`, JSON.stringify(item, null, 2));
@@ -6642,24 +7287,24 @@ class ExportApp {
         done++;
       }
 
-      this.updateProgress(90, "Compressing ZIP archive...", 4);
+      this.updateDownloadModal(92, "Compressing ZIP archive...", 3);
       const zipBlob = await zip.generateAsync({ type: "blob" });
 
       const timeStamp = new Date().toISOString().slice(0, 10);
-      this.triggerBlobDownload(zipBlob, `JanitorAI_SillyTavern_Vault_${timeStamp}.zip`);
+      this.triggerBlobDownload(zipBlob, `SillyTavern_Vault_${timeStamp}.zip`);
 
-      this.updateProgress(100, `Complete! Exported ${total} items.`, 4);
+      this.completeDownloadModal("Vault Export Complete!", `ZIP file with ${total} items downloaded`);
       this.showToast(`Successfully downloaded ZIP with ${total} items!`);
+
     } catch (err) {
       console.error("Batch export error:", err);
+      this.updateDownloadModal(100, `Export error: ${err.message}`, 4);
       this.showToast(`Batch export error: ${err.message}`, "error");
-    } finally {
-      setTimeout(() => this.showProgress(false), 2500);
     }
   }
 
   /* ==========================================================================
-     SILLYTAVERN SPEC & PNG CHUNK INJECTION
+     SILLYTAVERN SPECIFICATION & PNG METADATA INJECTION
      ========================================================================== */
   buildSillyTavernV2Card(bot) {
     const name = (bot.name || "Character").trim();
@@ -6761,6 +7406,10 @@ class ExportApp {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
         canvas.toBlob((b) => {
+          if (!b) {
+            reject(new Error("Canvas conversion to PNG blob returned null"));
+            return;
+          }
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
           reader.onerror = reject;
@@ -6779,7 +7428,7 @@ class ExportApp {
 
   injectCharaChunk(pngArrayBuffer, base64Payload) {
     const u8 = new Uint8Array(pngArrayBuffer);
-    const keyword = "chara\0";
+    const keyword = "chara ";
     const textBytes = new TextEncoder().encode(keyword + base64Payload);
     const dataLen = textBytes.length;
 
@@ -7056,7 +7705,8 @@ class ExportApp {
   }
 }
 
-const app = new ExportApp(); window.app = app;
+const app = new ExportApp();
+window.app = app;
 window.addEventListener('DOMContentLoaded', () => app.init());
 
   </script>

@@ -3,7 +3,7 @@
    Pure client-side in-memory zero-storage architecture.
    ========================================================================== */
 
-// 1. CRC32 Table & Computation
+// 1. CRC32 Computation Engine
 const CRC_TABLE = new Uint32Array(256);
 for (let i = 0; i < 256; i++) {
   let c = i;
@@ -21,7 +21,7 @@ function calculateCrc32(bytes) {
   return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-// 2. Icons definitions
+// 2. Icon SVGs
 const ICONS_SVG = {
   chat: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   token: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5H9.5a2.5 2.5 0 0 0 0 5H15"/></svg>',
@@ -45,11 +45,11 @@ class ExportApp {
   }
 
   init() {
-    // Theme initialization
+    // 1. Initialize Theme
     const savedTheme = localStorage.getItem('export_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
-    // Restore token if in session storage
+    // 2. Restore token from session memory if present
     const savedTok = sessionStorage.getItem('export_session_jwt');
     if (savedTok) {
       this.token = savedTok;
@@ -57,7 +57,7 @@ class ExportApp {
       if (input) input.value = savedTok;
     }
 
-    // Load sample cards for luxury immediate rendering
+    // 3. Load initial sample cards immediately
     this.loadDemoVault();
   }
 
@@ -71,15 +71,35 @@ class ExportApp {
 
   switchTab(tab) {
     this.activeTab = tab;
+
+    // Desktop nav buttons
     const btnVault = document.getElementById('nav-btn-vault');
     const btnCss = document.getElementById('nav-btn-css');
     if (btnVault) btnVault.classList.toggle('is-active', tab === 'vault');
     if (btnCss) btnCss.classList.toggle('is-active', tab === 'css');
+
+    // Mobile nav buttons
+    const mBtnVault = document.getElementById('m-nav-btn-vault');
+    const mBtnCss = document.getElementById('m-nav-btn-css');
+    if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
+    if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
+
+    // Views
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
     if (viewVault) viewVault.style.display = tab === 'vault' ? 'block' : 'none';
     if (viewCss) viewCss.style.display = tab === 'css' ? 'block' : 'none';
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  toggleScope(scopeId) {
+    const input = document.getElementById(`scope-${scopeId}`);
+    const card = document.getElementById(`scope-card-${scopeId}`);
+    if (input && card) {
+      input.checked = !input.checked;
+      card.classList.toggle('is-checked', input.checked);
+    }
   }
 
   onTokenInput() {
@@ -229,7 +249,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     SCAN ACCOUNT (JANITOR API)
+     SCAN ACCOUNT (WITH ANIMATED SKELETON CARDS)
      ========================================================================== */
   async scanAccount() {
     if (!this.token) {
@@ -243,6 +263,12 @@ class ExportApp {
     if (scanBtn) {
       scanBtn.disabled = true;
       scanBtn.innerHTML = `<span>Connecting to Hampter...</span>`;
+    }
+
+    // Render skeleton placeholders in the grid
+    const grid = document.getElementById('bot-cards-grid');
+    if (grid) {
+      grid.innerHTML = Array.from({ length: 6 }, () => '<div class="bot-card-skeleton"></div>').join('');
     }
 
     this.showProgress(true, "Scanning Vault", 10, "Validating token & fetching creator profile...", 1);
@@ -288,7 +314,7 @@ class ExportApp {
         }
       }
 
-      // 2. Fetch Lorebooks / Scripts
+      // 2. Fetch Lorebooks
       if (incLorebooks && userId) {
         this.updateProgress(50, "Fetching lorebooks and scripts...", 2);
         try {
@@ -353,7 +379,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     RENDER VAULT & BOT CARDS
+     RENDER VAULT & 9:16 BOT CARDS
      ========================================================================== */
   renderVault() {
     const toolbar = document.getElementById('vault-toolbar-section');
@@ -505,7 +531,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     DETAIL MODAL & SINGLE DOWNLOAD
+     DETAIL MODAL
      ========================================================================== */
   openDetailModal(id) {
     const bot = this.items.find(b => b.id === id);
@@ -553,45 +579,142 @@ class ExportApp {
     }
   }
 
+  /* ==========================================================================
+     AUTHENTIC DOWNLOAD POPUP MODAL CONTROLLER
+     ========================================================================== */
+  openDownloadModal(title, thumb, name, sub) {
+    const modal = document.getElementById('download-progress-modal');
+    if (!modal) return;
+
+    document.getElementById('dl-modal-title').innerText = title;
+    document.getElementById('dl-preview-thumb').src = thumb || DEFAULT_AVATAR;
+    document.getElementById('dl-preview-name').innerText = name || 'Item';
+    document.getElementById('dl-preview-sub').innerText = sub || 'SillyTavern V2 PNG • Chara Chunk';
+
+    // Reset animations
+    document.getElementById('dl-deck-loader').style.display = 'block';
+    document.getElementById('dl-success-icon').style.display = 'none';
+    document.getElementById('dl-modal-footer').style.display = 'none';
+    document.getElementById('dl-progress-fill').style.width = '0%';
+    document.getElementById('dl-pct-text').innerText = '0%';
+
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) {
+        stepRow.classList.toggle('is-active', i === 1);
+        stepRow.classList.remove('is-done');
+      }
+    }
+
+    modal.classList.add('is-active');
+  }
+
+  updateDownloadModal(pct, statusText, activeStep) {
+    const elFill = document.getElementById('dl-progress-fill');
+    const elPct = document.getElementById('dl-pct-text');
+    const elStatus = document.getElementById('dl-status-text');
+
+    if (elFill) elFill.style.width = `${pct}%`;
+    if (elPct) elPct.innerText = `${pct}%`;
+    if (elStatus) elStatus.innerText = statusText;
+
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) {
+        stepRow.classList.toggle('is-active', i === activeStep);
+        stepRow.classList.toggle('is-done', i < activeStep);
+      }
+    }
+  }
+
+  completeDownloadModal(headline, sub) {
+    this.updateDownloadModal(100, headline || "Download complete!", 4);
+    for (let i = 1; i <= 4; i++) {
+      const stepRow = document.getElementById(`dl-step-${i}`);
+      if (stepRow) stepRow.classList.add('is-done');
+    }
+
+    // Switch Deck Loader to Animated Success Circle
+    document.getElementById('dl-deck-loader').style.display = 'none';
+    document.getElementById('dl-success-icon').style.display = 'flex';
+    document.getElementById('dl-preview-sub').innerText = sub || 'Ready for SillyTavern';
+    document.getElementById('dl-modal-footer').style.display = 'flex';
+  }
+
+  closeDownloadModal() {
+    const modal = document.getElementById('download-progress-modal');
+    if (modal) modal.classList.remove('is-active');
+  }
+
+  /* ==========================================================================
+     SINGLE CARD DOWNLOAD (WIRED TO DOWNLOAD POPUP MODAL)
+     ========================================================================== */
   async downloadSingleCard(id) {
     const bot = this.items.find(b => b.id === id);
     if (!bot) return;
 
-    this.showToast(`Compiling SillyTavern V2 card for "${bot.name}"...`);
+    let avatarUrl = bot.avatar || DEFAULT_AVATAR;
+    if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
+      avatarUrl = `https://ella.janitorai.com/bot-avatars/${avatarUrl}`;
+    }
+
+    const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+
+    // 1. Open the luxury download popup modal!
+    this.openDownloadModal(
+      "Compiling Character Card",
+      avatarUrl,
+      bot.name,
+      bot._type === 'character' ? "SillyTavern V2 PNG • Chara Chunk" : `${bot.category} JSON`
+    );
+
     try {
-      const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+      // Step 1: Resolve Metadata & Greetings
+      this.updateDownloadModal(25, "Resolving character metadata & greetings...", 1);
+      await new Promise(r => setTimeout(r, 260));
 
       if (bot._type === 'lorebook') {
+        this.updateDownloadModal(70, "Packaging Lorebook JSON...", 3);
+        await new Promise(r => setTimeout(r, 200));
         const jsonStr = JSON.stringify(bot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_lorebook.json`);
-        this.showToast(`Downloaded lorebook "${bot.name}"`);
+        this.completeDownloadModal("Lorebook Exported!", "JSON file ready");
         return;
       }
 
       if (bot._type === 'persona') {
+        this.updateDownloadModal(70, "Packaging Persona JSON...", 3);
+        await new Promise(r => setTimeout(r, 200));
         const jsonStr = JSON.stringify(bot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
-        this.showToast(`Downloaded persona "${bot.name}"`);
+        this.completeDownloadModal("Persona Exported!", "JSON file ready");
         return;
       }
 
-      let avatarUrl = bot.avatar;
-      if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
-        avatarUrl = `https://ella.janitorai.com/bot-avatars/${avatarUrl}`;
-      }
-
+      // Step 2: Convert avatar to lossless PNG canvas
+      this.updateDownloadModal(55, "Fetching & converting high-res avatar to PNG...", 2);
       const cardV2 = this.buildSillyTavernV2Card(bot);
+
+      // Step 3: Inject SillyTavern V2 chara chunk & CRC32
+      this.updateDownloadModal(82, "Embedding SillyTavern V2 chara chunk & CRC32...", 3);
       const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
+
+      // Step 4: Deliver file download
+      this.updateDownloadModal(100, "Delivering SillyTavern card download...", 4);
       this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
-      this.showToast(`Downloaded "${bot.name}" character card!`);
+
+      this.completeDownloadModal("Card Download Complete!", "SillyTavern V2 PNG • Ready to import");
+      this.showToast(`Downloaded "${bot.name}" card!`);
+
     } catch (err) {
       console.error("Single download error:", err);
+      this.updateDownloadModal(100, `Download error: ${err.message}`, 4);
       this.showToast(`Error compiling card: ${err.message}`, "error");
     }
   }
 
   /* ==========================================================================
-     BATCH ZIP EXPORTER
+     BATCH EXPORT SELECTED AS ZIP (WIRED TO DOWNLOAD POPUP MODAL)
      ========================================================================== */
   async exportSelectedZip() {
     const selected = this.items.filter(b => this.selectedIds.has(b.id));
@@ -605,7 +728,13 @@ class ExportApp {
       return;
     }
 
-    this.showProgress(true, "Building SillyTavern Vault Zip", 5, "Preparing zip archive...", 1);
+    const total = selected.length;
+    this.openDownloadModal(
+      "Compiling SillyTavern Vault (.zip)",
+      selected[0]?.avatar || DEFAULT_AVATAR,
+      `Vault Archive (${total} Items)`,
+      "SillyTavern Characters & World Info"
+    );
 
     try {
       const zip = new JSZip();
@@ -613,14 +742,12 @@ class ExportApp {
       const loreFolder = zip.folder("lorebooks");
       const persFolder = zip.folder("personas");
 
-      const total = selected.length;
       let done = 0;
-
       for (const item of selected) {
         const safeName = (item.name || "item").replace(/[/\\?%*:|"<>]/g, "_").trim();
         const pct = Math.round(((done + 1) / total) * 80);
 
-        this.updateProgress(pct, `Processing ${item.name} (${done + 1}/${total})...`, 3);
+        this.updateDownloadModal(pct, `Compiling ${done + 1} of ${total}: ${item.name}...`, 2);
 
         if (item._type === 'lorebook') {
           loreFolder.file(`${safeName}.json`, JSON.stringify(item, null, 2));
@@ -639,24 +766,24 @@ class ExportApp {
         done++;
       }
 
-      this.updateProgress(90, "Compressing ZIP archive...", 4);
+      this.updateDownloadModal(92, "Compressing ZIP archive...", 3);
       const zipBlob = await zip.generateAsync({ type: "blob" });
 
       const timeStamp = new Date().toISOString().slice(0, 10);
-      this.triggerBlobDownload(zipBlob, `JanitorAI_SillyTavern_Vault_${timeStamp}.zip`);
+      this.triggerBlobDownload(zipBlob, `SillyTavern_Vault_${timeStamp}.zip`);
 
-      this.updateProgress(100, `Complete! Exported ${total} items.`, 4);
+      this.completeDownloadModal("Vault Export Complete!", `ZIP file with ${total} items downloaded`);
       this.showToast(`Successfully downloaded ZIP with ${total} items!`);
+
     } catch (err) {
       console.error("Batch export error:", err);
+      this.updateDownloadModal(100, `Export error: ${err.message}`, 4);
       this.showToast(`Batch export error: ${err.message}`, "error");
-    } finally {
-      setTimeout(() => this.showProgress(false), 2500);
     }
   }
 
   /* ==========================================================================
-     SILLYTAVERN SPEC & PNG CHUNK INJECTION
+     SILLYTAVERN SPECIFICATION & PNG METADATA INJECTION
      ========================================================================== */
   buildSillyTavernV2Card(bot) {
     const name = (bot.name || "Character").trim();
@@ -758,6 +885,10 @@ class ExportApp {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
         canvas.toBlob((b) => {
+          if (!b) {
+            reject(new Error("Canvas conversion to PNG blob returned null"));
+            return;
+          }
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
           reader.onerror = reject;
@@ -776,7 +907,7 @@ class ExportApp {
 
   injectCharaChunk(pngArrayBuffer, base64Payload) {
     const u8 = new Uint8Array(pngArrayBuffer);
-    const keyword = "chara\0";
+    const keyword = "chara ";
     const textBytes = new TextEncoder().encode(keyword + base64Payload);
     const dataLen = textBytes.length;
 
@@ -1053,5 +1184,6 @@ class ExportApp {
   }
 }
 
-const app = new ExportApp(); window.app = app;
+const app = new ExportApp();
+window.app = app;
 window.addEventListener('DOMContentLoaded', () => app.init());
