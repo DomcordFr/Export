@@ -16,7 +16,7 @@ import os
 import json
 import webbrowser
 
-PORT = 8095
+PORT = 12345
 if len(sys.argv) > 1 and sys.argv[1].isdigit():
     PORT = int(sys.argv[1])
 elif "--port" in sys.argv:
