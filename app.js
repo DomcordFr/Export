@@ -282,6 +282,36 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     return `https://ella.janitorai.com/${folder}/${avatar}`;
   }
 
+  async fetchSafeJson(url, options = {}) {
+    const res = await fetch(url, options);
+    const rawText = await res.text();
+
+    const lower = rawText.toLowerCase();
+    if (rawText.trim().startsWith('<') || lower.includes('<!doctype') || lower.includes('janitor is managing traffic') || lower.includes('please wait — janitor') || lower.includes('access restricted')) {
+      if (lower.includes('janitor is managing traffic') || lower.includes('please wait — janitor')) {
+        throw new Error("JanitorAI is currently managing high traffic (Cloudflare Waiting Room active). Please retry in a few moments.");
+      }
+      if (lower.includes('access restricted')) {
+        throw new Error("JanitorAI access restricted by Cloudflare. Please retry shortly.");
+      }
+      throw new Error(`Upstream returned HTML instead of data (Status ${res.status}).`);
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch (e) {
+      throw new Error(`Invalid response format from server (Status ${res.status}).`);
+    }
+
+    if (!res.ok) {
+      const errMsg = parsed?.message || parsed?.error || `Request failed with status ${res.status}`;
+      throw new Error(errMsg);
+    }
+
+    return parsed;
+  }
+
   parseJwt(tok) {
     try {
       const parts = tok.split('.');
@@ -338,15 +368,16 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
       let keepGoing = true;
       while (keepGoing) {
         const url = this.getApiUrl(`characters/v2/mine?page=${page}`);
-        const res = await fetch(url, { headers: this.getHeaders() });
-        if (!res.ok) {
-          if (res.status === 401 || res.status === 403) {
+        let json = null;
+        try {
+          json = await this.fetchSafeJson(url, { headers: this.getHeaders() });
+        } catch (fetchErr) {
+          if (fetchErr.message && (fetchErr.message.includes('401') || fetchErr.message.includes('403') || fetchErr.message.includes('expired') || fetchErr.message.includes('Unauthorized'))) {
             throw new Error("Invalid or expired session token. Please verify token.");
           }
+          console.warn("Scan pagination notice:", fetchErr.message);
           break;
         }
-
-        const json = await res.json();
         const list = json.data || [];
         if (list.length === 0) break;
 
@@ -370,9 +401,8 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
       if (incLorebooks && userId) {
         this.updateProgress(50, "Fetching lorebooks and scripts...", 2);
         try {
-          const lRes = await fetch(this.getApiUrl(`script/user/${userId}`), { headers: this.getHeaders() });
-          if (lRes.ok) {
-            const lJson = await lRes.json();
+          const lJson = await this.fetchSafeJson(this.getApiUrl(`script/user/${userId}`), { headers: this.getHeaders() });
+          if (lJson) {
             const sList = lJson.scripts || lJson || [];
             if (Array.isArray(sList)) {
               for (const s of sList) {
@@ -389,9 +419,8 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
       if (incPersonas) {
         this.updateProgress(75, "Fetching custom personas...", 2);
         try {
-          const pRes = await fetch(this.getApiUrl('personas/mine'), { headers: this.getHeaders() });
-          if (pRes.ok) {
-            const pList = await pRes.json();
+          const pList = await this.fetchSafeJson(this.getApiUrl('personas/mine'), { headers: this.getHeaders() });
+          if (pList) {
             if (Array.isArray(pList)) {
               for (const p of pList) {
                 p._type = 'persona';
@@ -851,13 +880,10 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
      ========================================================================== */
   async fetchFullBotData(botId) {
     try {
-      const res = await fetch(this.getApiUrl(`characters/${botId}`), { headers: this.getHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        return data.data || data;
-      }
+      const data = await this.fetchSafeJson(this.getApiUrl(`characters/${botId}`), { headers: this.getHeaders() });
+      return data.data || data;
     } catch (e) {
-      console.warn("Could not fetch full bot definition:", e);
+      console.warn("Could not fetch full bot definition:", e.message || e);
     }
     return null;
   }
@@ -1364,8 +1390,28 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
-      this.showToast("Please enter a Janitor profile link or @handle", "error");
+      this.showToast("Please enter a Janitor profile link, @handle, or paste raw CSS/bio markup", "error");
       input.focus();
+      return;
+    }
+
+    // Check if user directly pasted raw HTML/CSS/About-Me text
+    const isDirectMarkup = rawInput.includes('<style') || rawInput.includes('<div') || (rawInput.includes('{') && rawInput.includes('}')) || rawInput.includes('class=');
+    if (isDirectMarkup) {
+      this.showToast("Direct HTML/CSS markup detected. Parsing bio...", "info");
+      this.processBioMarkup(rawInput, { user_name: "Custom Bio", followers_count: 0, total_bots: 0 });
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+        btn.innerHTML = `
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>Extract Profile</span>
+          <kbd class="kbd-badge">↵</kbd>
+        `;
+      }
       return;
     }
 
@@ -1391,47 +1437,71 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     this.showToast(`Fetching profile "${profileId}"...`);
 
     try {
-      const res = await fetch(this.getApiUrl(`profiles/${profileId}`), { headers: this.getHeaders() });
-      if (!res.ok) {
-        throw new Error(`Profile not found (Status ${res.status})`);
-      }
-
-      const profileData = await res.json();
+      const profileData = await this.fetchSafeJson(this.getApiUrl(`profiles/${profileId}`), { headers: this.getHeaders() });
       this.currentProfile = profileData;
       this.renderProfileMeta(profileData);
+      this.processBioMarkup(profileData.about_me || "", profileData);
+      this.showToast("Profile styling & markup successfully extracted!", "success");
 
-      const aboutMe = profileData.about_me || "";
-
-      // 1. Extract CSS
-      let css = "";
-      const styleMatches = [...aboutMe.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];
-      for (const m of styleMatches) {
-        css += m[1] + "\n\n";
+    } catch (err) {
+      console.error("Extract CSS error:", err);
+      let friendlyMsg = err.message || "Failed to retrieve profile";
+      if (friendlyMsg.includes("Unexpected token") || friendlyMsg.includes("not valid JSON")) {
+        friendlyMsg = "Janitor upstream returned an unexpected response. Please try again shortly or paste bio markup directly.";
       }
-
-      // Also extract inline styles if present
-      const inlineMatches = [...aboutMe.matchAll(/style="([^"]+)"/gi)];
-      if (inlineMatches.length > 0 && !css.trim()) {
-        css = "/* Extracted Inline Styles from Profile Elements */\n";
-        inlineMatches.forEach((m, idx) => {
-          css += `.profile-element-${idx + 1} { ${m[1]} }\n`;
-        });
+      this.showToast(friendlyMsg, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+        btn.innerHTML = `
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>Extract Profile</span>
+          <kbd class="kbd-badge">↵</kbd>
+        `;
       }
+    }
+  }
 
-      if (!css.trim()) {
-        css = "/* No custom <style> rules declared in this profile bio. */\n/* The profile uses standard Janitor layout. */";
-      }
-      this.extractedCss = css.trim();
+  processBioMarkup(aboutMe, profileData = {}) {
+    // 1. Extract CSS
+    let css = "";
+    const styleMatches = [...aboutMe.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];
+    for (const m of styleMatches) {
+      css += m[1] + "\n\n";
+    }
 
-      // 2. Extract HTML markup (divs, spans, layout)
-      let cleanHtml = aboutMe
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // remove inline style tags for pure HTML
-        .trim();
-      if (!cleanHtml) cleanHtml = "<div class=\"empty-bio\">\n  <p>No custom HTML markup present in bio.</p>\n</div>";
-      this.extractedHtml = cleanHtml;
+    // Also extract inline styles if present
+    const inlineMatches = [...aboutMe.matchAll(/style="([^"]+)"/gi)];
+    if (inlineMatches.length > 0 && !css.trim()) {
+      css = "/* Extracted Inline Styles from Profile Elements */\n";
+      inlineMatches.forEach((m, idx) => {
+        css += `.profile-element-${idx + 1} { ${m[1]} }\n`;
+      });
+    }
 
-      // 3. Standalone full HTML document
-      this.extractedFullDoc = `<!DOCTYPE html>
+    // If pure CSS text was provided directly without <style> tags
+    if (!css.trim() && aboutMe.includes('{') && aboutMe.includes('}')) {
+      css = aboutMe.replace(/<[^>]+>/g, '').trim();
+    }
+
+    if (!css.trim()) {
+      css = "/* No custom <style> rules declared in this profile bio. */\n/* The profile uses standard Janitor layout. */";
+    }
+    this.extractedCss = css.trim();
+
+    // 2. Extract HTML markup (divs, spans, layout)
+    let cleanHtml = aboutMe
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .trim();
+    if (!cleanHtml) cleanHtml = '<div class="empty-bio">\n  <p>No custom HTML markup present in bio.</p>\n</div>';
+    this.extractedHtml = cleanHtml;
+
+    // 3. Standalone full HTML document
+    this.extractedFullDoc = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -1455,31 +1525,12 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
 </body>
 </html>`;
 
-      // 4. Clean Plain Text
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = aboutMe.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-      this.extractedTxt = (tempDiv.textContent || tempDiv.innerText || '').trim();
+    // 4. Clean Plain Text
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = aboutMe.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    this.extractedTxt = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
-      this.renderExtractedStudio();
-      this.showToast("Profile styling & markup successfully extracted!", "success");
-
-    } catch (err) {
-      console.error("Extract CSS error:", err);
-      this.showToast(`Could not extract profile: ${err.message}`, "error");
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove('is-loading');
-        btn.innerHTML = `
-          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="16 18 22 12 16 6"/>
-            <polyline points="8 6 2 12 8 18"/>
-          </svg>
-          <span>Extract Profile</span>
-          <kbd class="kbd-badge">↵</kbd>
-        `;
-      }
-    }
+    this.renderExtractedStudio();
   }
 
   renderProfileMeta(data) {

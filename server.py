@@ -171,25 +171,42 @@ class ExportHandler(http.server.SimpleHTTPRequestHandler):
         # 5. Execute upstream request & pipe response
         try:
             with urllib.request.urlopen(req, timeout=30, context=SSL_CTX) as upstream_resp:
+                raw_body = upstream_resp.read()
+                is_html = raw_body.lstrip().startswith(b"<!doctype") or raw_body.lstrip().startswith(b"<html") or b"janitor is managing traffic" in raw_body
+                if is_html:
+                    self.send_response(503 if b"janitor is managing traffic" in raw_body else 404)
+                    self._set_cors_headers()
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    err_msg = "JanitorAI is currently managing high traffic (Cloudflare Waiting Room active). Please wait a moment and try again." if b"janitor is managing traffic" in raw_body else "Janitor upstream returned an HTML page instead of JSON."
+                    self.wfile.write(json.dumps({"error": err_msg, "statusCode": 503 if b"janitor is managing traffic" in raw_body else 404}).encode("utf-8"))
+                    return
+
                 self.send_response(upstream_resp.status)
                 self._set_cors_headers()
                 for header_key, header_val in upstream_resp.getheaders():
                     if header_key.lower() in ("content-type", "content-disposition", "cache-control", "last-modified", "etag"):
                         self.send_header(header_key, header_val)
                 self.end_headers()
-                self.wfile.write(upstream_resp.read())
+                self.wfile.write(raw_body)
         except urllib.error.HTTPError as http_err:
+            raw_err = http_err.read()
+            is_err_html = raw_err.lstrip().startswith(b"<!doctype") or raw_err.lstrip().startswith(b"<html")
             self.send_response(http_err.code)
             self._set_cors_headers()
-            self.send_header("Content-Type", http_err.headers.get("Content-Type", "application/json"))
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(http_err.read())
+            if is_err_html:
+                err_msg = "JanitorAI is currently managing high traffic (Cloudflare Waiting Room active). Please retry shortly." if b"janitor is managing traffic" in raw_err else f"Upstream returned HTTP {http_err.code}"
+                self.wfile.write(json.dumps({"error": err_msg, "statusCode": http_err.code}).encode("utf-8"))
+            else:
+                self.wfile.write(raw_err)
         except Exception as err:
             self.send_response(502)
             self._set_cors_headers()
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            err_data = json.dumps({"error": f"Proxy Gateway Failure: {str(err)}"}).encode("utf-8")
+            err_data = json.dumps({"error": f"Proxy Gateway Failure: {str(err)}", "statusCode": 502}).encode("utf-8")
             self.wfile.write(err_data)
 
 
