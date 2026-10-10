@@ -121,6 +121,20 @@ class ExportApp {
         this.closeDownloadModal();
       }
     });
+
+    // 5. Dismiss Fullscreen Kinetic Splash Loader
+    const dismissSplash = () => {
+      const splash = document.getElementById('app-splash-loader');
+      if (splash && !splash.classList.contains('is-hidden')) {
+        splash.classList.add('is-hidden');
+      }
+    };
+    if (document.readyState === 'complete') {
+      setTimeout(dismissSplash, 400);
+    } else {
+      window.addEventListener('load', () => setTimeout(dismissSplash, 350));
+      setTimeout(dismissSplash, 1200);
+    }
   }
 
   toggleTheme() {
@@ -147,6 +161,14 @@ class ExportApp {
     const mBtnCss = document.getElementById('m-nav-btn-css');
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
+
+    // Animate footer during tab switch
+    const footer = document.querySelector('.dominion-footer');
+    if (footer) {
+      footer.classList.remove('footer-animate');
+      void footer.offsetWidth;
+      footer.classList.add('footer-animate');
+    }
 
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
@@ -193,7 +215,7 @@ class ExportApp {
         });
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 140);
+    }, 180);
   }
 
   setExportFormat(fmt) {
@@ -259,6 +281,28 @@ class ExportApp {
   closeTokenHelp() {
     const modal = document.getElementById('token-help-modal');
     if (modal) modal.classList.remove('is-active');
+  }
+
+  copyTokenSnippet(btn) {
+    const code = document.getElementById('token-console-code');
+    const textToCopy = code ? code.innerText.trim() : "copy(JSON.parse(localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token'))?.access_token || localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token') || '')";
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      if (btn) {
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `
+          <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Copied!</span>
+        `;
+        btn.classList.add('btn-copied');
+        setTimeout(() => {
+          btn.innerHTML = origHtml;
+          btn.classList.remove('btn-copied');
+        }, 2200);
+      }
+      this.showToast("Console command copied to clipboard!");
+    }).catch(() => {
+      this.showToast("Could not copy command to clipboard", "error");
+    });
   }
 
   openPrivacyModal() {

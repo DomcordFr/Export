@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Export — Janitor Vault Exporter & Profile CSS Studio</title>
+  <title>Export | JanitorAI Backups & Card Exporter</title>
   
-  <meta name="title" content="Export — Janitor Vault Exporter & Profile CSS Studio">
-  <meta name="description" content="Export public & unlisted bots, lorebooks, and personas into SillyTavern V2 cards or JSON. Extract profile CSS & HTML in 1 click. 100% client-side.">
-  <meta name="theme-color" content="#09090b">
+  <meta name="title" content="Export | JanitorAI Backups & Card Exporter">
+  <meta name="description" content="Save your JanitorAI characters, personas, and chats directly from your browser. Download as SillyTavern V2 PNGs or raw JSON. Runs completely on your device with zero data stored.">
+  <meta name="theme-color" content="#D4D4D8">
 
-  <!-- Open Graph -->
+  <!-- Open Graph / Discord Embed -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://export.domcord.org/">
   <meta property="og:site_name" content="Export">
-  <meta property="og:title" content="Export — Janitor Vault Exporter & Profile CSS Studio">
-  <meta property="og:description" content="Complete luxury Janitor backup suite: SillyTavern V2 PNG card compilation, JSON export, lorebooks, personas, and live profile CSS/HTML extractor.">
+  <meta property="og:title" content="Export | JanitorAI Backups & Card Exporter">
+  <meta property="og:description" content="Save your JanitorAI characters, personas, and chats directly from your browser. Download as SillyTavern V2 PNGs or raw JSON. Runs completely on your device with zero data stored.">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="https://export.domcord.org/">
+  <meta name="twitter:title" content="Export | JanitorAI Backups & Card Exporter">
+  <meta name="twitter:description" content="Save your JanitorAI characters, personas, and chats directly from your browser. Download as SillyTavern V2 PNGs or raw JSON. Runs completely on your device with zero data stored.">
 
   <!-- Geist Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -5318,14 +5324,26 @@
   letter-spacing: 0.04em;
 }
 .input-help-link {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
-  text-decoration: underline;
-  transition: color var(--duration-fast) var(--ease-out);
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: all var(--duration-fast) var(--ease-out);
+  user-select: none;
 }
 .input-help-link:hover {
   color: var(--text-primary);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  text-decoration: none !important;
 }
 
 .token-input-wrap {
@@ -6663,9 +6681,9 @@ main.container {
 .dominion-footer {
   border: none !important;
   border-top: none !important;
-  background: linear-gradient(180deg, rgba(32, 32, 38, 0.85) 0%, rgba(20, 20, 26, 0.95) 50%, #09090B 100%) !important;
-  padding: var(--space-8) var(--space-4) var(--space-5) !important;
-  margin-top: auto;
+  background: linear-gradient(180deg, rgba(9, 9, 11, 0) 0%, rgba(18, 18, 22, 0.65) 30%, rgba(22, 22, 28, 0.98) 100%) !important;
+  padding: var(--space-8) var(--space-4) var(--space-6) !important;
+  margin-top: 56px !important;
   width: 100%;
   box-sizing: border-box;
   opacity: 0;
@@ -6673,7 +6691,11 @@ main.container {
 }
 
 [data-theme="light"] .dominion-footer {
-  background: linear-gradient(180deg, rgba(230, 233, 238, 0.85) 0%, rgba(245, 247, 250, 0.95) 50%, #F8F9FA 100%) !important;
+  background: linear-gradient(180deg, rgba(248, 249, 250, 0) 0%, rgba(235, 238, 242, 0.6) 30%, rgba(240, 243, 247, 0.98) 100%) !important;
+}
+
+.dominion-footer.footer-animate {
+  animation: footerTabFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes footerFadeIn {
@@ -6687,52 +6709,71 @@ main.container {
   }
 }
 
+@keyframes footerTabFade {
+  0% {
+    opacity: 0.2;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 768px) {
   .dominion-footer {
     padding-top: var(--space-6) !important;
-    padding-bottom: calc(var(--bottom-nav-height, 60px) + 12px) !important;
+    padding-bottom: calc(var(--bottom-nav-height, 60px) + 14px) !important;
+    margin-top: 40px !important;
   }
 }
+
 .footer-inner {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.footer-top-row {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
-  text-align: center;
+  gap: var(--space-3);
+  width: 100%;
 }
 @media (min-width: 768px) {
-  .footer-inner {
+  .footer-top-row {
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
-    text-align: left;
+    align-items: center;
   }
 }
-.footer-left-col {
+
+.footer-bottom-row {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+[data-theme="light"] .footer-bottom-row {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 @media (min-width: 768px) {
-  .footer-left-col {
-    align-items: flex-start;
+  .footer-bottom-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 }
-.footer-right-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-@media (min-width: 768px) {
-  .footer-right-col {
-    align-items: flex-end;
-  }
-}
+
 .footer-brand {
   display: flex;
   align-items: center;
@@ -6746,30 +6787,47 @@ main.container {
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
-.footer-open-source-wrap {
-  margin-top: 2px;
+
+.footer-badges-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+
 .footer-github-link {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 5px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   text-decoration: none;
   letter-spacing: -0.01em;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--duration-fast) var(--ease-out);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 .footer-github-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
+  background: var(--surface-3);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+[data-theme="light"] .footer-github-link {
+  background: var(--surface-1);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .footer-github-link:hover {
+  background: var(--surface-2);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .github-svg-icon {
   width: 13px;
@@ -6780,19 +6838,19 @@ main.container {
 .footer-external-arrow {
   font-size: 11px;
   color: var(--text-muted);
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition: transform var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 .footer-github-link:hover .footer-external-arrow {
   transform: translate(1px, -1px);
   color: var(--text-primary);
 }
+
 .footer-subheading-wrap {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  margin-top: 2px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -6832,47 +6890,97 @@ main.container {
 .footer-privacy-btn:hover {
   color: var(--text-primary);
 }
-.footer-attribution {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.lucid-hover-link {
-  position: relative;
-  color: #FFFFFF;
-  font-weight: 700;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  padding-bottom: 2px;
-}
-.lucid-hover-link .animated-underline {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, #6366F1, #EC4899, #8B5CF6);
-  background-size: 200% 100%;
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.lucid-hover-link:hover .animated-underline {
-  transform: scaleX(1);
-  transform-origin: left;
-  animation: shimmerUnderline 1.8s linear infinite;
-}
-@keyframes shimmerUnderline {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
+
 .footer-copy {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* Token Snippet Box (Mobile Optimized & Overflow Safe) */
+.token-snippet-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.token-snippet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.token-snippet-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.snippet-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.snippet-copy-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+.snippet-copy-btn.btn-copied {
+  background: var(--success-tint);
+  border-color: var(--success);
+  color: var(--success);
+}
+.token-snippet-desc {
+  font-size: var(--text-2xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.token-snippet-code {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #E4E4E7;
+  line-height: 1.45;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  user-select: all;
+  box-sizing: border-box;
+}
+[data-theme="light"] .token-snippet-box {
+  background: var(--surface-1);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .token-snippet-code {
+  background: var(--surface-2);
+  color: #18181B;
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 /* Privacy Policy Modal Content */
@@ -6914,9 +7022,239 @@ main.container {
 .policy-list li {
   margin-bottom: 4px;
 }
+
+/* ==========================================================================
+   FULLSCREEN KINETIC SPLASH LOADER (Stacking Cards / Chips Motion)
+   ========================================================================== */
+.app-splash-loader {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #060608;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
+}
+
+.app-splash-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.03);
+}
+
+.splash-backdrop-bloom {
+  position: absolute;
+  width: 500px;
+  height: 400px;
+  background: radial-gradient(ellipse 320px 240px at center, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.015) 50%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+  animation: splashBloomPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes splashBloomPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.splash-content-box {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-deck {
+  position: relative;
+  width: 150px;
+  height: 120px;
+  margin: 0 auto var(--space-6);
+  perspective: 800px;
+}
+
+.splash-card {
+  position: absolute;
+  width: 64px;
+  height: 94px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  bottom: 12px;
+  left: calc(50% - 32px);
+  transform-origin: 50% 90%;
+  will-change: transform, opacity, box-shadow;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  position: relative;
+}
+
+.splash-card-left {
+  background: linear-gradient(145deg, #18181b 0%, #0c0c0e 100%);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+  z-index: 1;
+  animation: splashLeftCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.splash-card-center {
+  background: linear-gradient(145deg, #222226 0%, #121215 100%);
+  border-color: #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 255, 255, 0.14);
+  z-index: 3;
+  animation: splashCenterCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.splash-card-right {
+  background: linear-gradient(145deg, #18181b 0%, #0c0c0e 100%);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+  animation: splashRightCard 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes splashLeftCard {
+  0%, 100% {
+    transform: rotate(-14deg) translate(-14px, 2px);
+    opacity: 0.75;
+  }
+  50% {
+    transform: rotate(-24deg) translate(-28px, 6px) scale(0.96);
+    opacity: 0.95;
+  }
+}
+
+@keyframes splashCenterCard {
+  0%, 100% {
+    transform: translateY(-4px) scale(1);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    transform: translateY(-16px) scale(1.08);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.95), 0 0 32px rgba(255, 255, 255, 0.25);
+  }
+}
+
+@keyframes splashRightCard {
+  0%, 100% {
+    transform: rotate(14deg) translate(14px, 2px);
+    opacity: 0.75;
+  }
+  50% {
+    transform: rotate(24deg) translate(28px, 6px) scale(0.96);
+    opacity: 0.95;
+  }
+}
+
+.splash-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.splash-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  opacity: 0.95;
+}
+
+.splash-meter {
+  width: 80px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-meter-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
+  animation: splashMeterScan 1.6s ease-in-out infinite;
+}
+
+@keyframes splashMeterScan {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+[data-theme="light"] .app-splash-loader {
+  background: #F8F9FA;
+}
+[data-theme="light"] .splash-backdrop-bloom {
+  background: radial-gradient(ellipse 320px 240px at center, rgba(0, 0, 0, 0.05) 0%, transparent 70%);
+}
+[data-theme="light"] .splash-title {
+  color: #121215;
+}
+[data-theme="light"] .splash-card-left {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F1F3F5 100%);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .splash-card-center {
+  background: #FFFFFF;
+  border-color: #121215;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .splash-card-right {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F1F3F5 100%);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .splash-meter {
+  background: rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .splash-meter-bar {
+  background: linear-gradient(90deg, transparent, #121215, transparent);
+}
 </style>
 </head>
 <body>
+  <!-- FULLSCREEN KINETIC SPLASH LOADER -->
+  <div id="app-splash-loader" class="app-splash-loader">
+    <div class="splash-backdrop-bloom"></div>
+    <div class="splash-content-box">
+      <div class="splash-deck">
+        <div class="splash-card splash-card-left">
+          <div class="splash-card-inner"></div>
+        </div>
+        <div class="splash-card splash-card-center">
+          <div class="splash-card-inner"></div>
+        </div>
+        <div class="splash-card splash-card-right">
+          <div class="splash-card-inner"></div>
+        </div>
+      </div>
+      <div class="splash-brand">
+        <div class="splash-title">Export</div>
+        <div class="splash-meter">
+          <div class="splash-meter-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- APP HEADER -->
   <header class="app-header">
     <div class="container header-inner">
@@ -6934,7 +7272,7 @@ main.container {
       <nav class="nav-desktop-links">
         <button class="nav-link-btn is-active" id="nav-btn-vault" onclick="app.switchTab('vault')">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Backup Vault
+          Export
         </button>
         <button class="nav-link-btn" id="nav-btn-css" onclick="app.switchTab('css')">
           <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -6960,7 +7298,7 @@ main.container {
     <div class="mobile-nav-bar">
       <button class="mobile-nav-btn is-active" id="m-nav-btn-vault" onclick="app.switchTab('vault')">
         <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Vault
+        Export
       </button>
       <button class="mobile-nav-btn" id="m-nav-btn-css" onclick="app.switchTab('css')">
         <svg class="ui-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -6969,11 +7307,11 @@ main.container {
     </div>
 
     <!-- ========================================== -->
-    <!-- VIEW 1: BACKUP VAULT -->
+    <!-- VIEW 1: EXPORT CARDS -->
     <!-- ========================================== -->
     <section id="view-vault" class="view-panel is-active">
       <div class="vault-hero">
-        <h1 class="vault-title">Export Character Cards & Vault</h1>
+        <h1 class="vault-title">Export Character Cards</h1>
         <p class="vault-subtitle">
           Export your public and private characters, lorebooks, and personas into importable SillyTavern V2 PNG character cards or V2 JSON files. 100% client-side compilation in volatile memory.
         </p>
@@ -7296,7 +7634,7 @@ main.container {
   <!-- ========================================== -->
   <footer class="dominion-footer">
     <div class="footer-inner">
-      <div class="footer-left-col">
+      <div class="footer-top-row">
         <div class="footer-brand" onclick="app.switchTab('vault')">
           <svg class="dominion-layers-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon class="layer-plate layer-plate-top" points="12 2 2 7 12 12 22 7 12 2"/>
@@ -7306,7 +7644,7 @@ main.container {
           <span class="footer-title">Dominion Export</span>
         </div>
 
-        <div class="footer-open-source-wrap">
+        <div class="footer-badges-group">
           <a href="https://github.com/DomcordFr/Export" target="_blank" rel="noopener noreferrer" class="footer-github-link" title="View Source on GitHub">
             <svg class="github-svg-icon" viewBox="0 0 24 24" fill="currentColor">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
@@ -7315,7 +7653,9 @@ main.container {
             <span class="footer-external-arrow">↗</span>
           </a>
         </div>
+      </div>
 
+      <div class="footer-bottom-row">
         <div class="footer-subheading-wrap">
           <a href="https://github.com/DomcordFr/Export" target="_blank" rel="noopener noreferrer" class="footer-local-subheading">
             Run your own version locally!
@@ -7325,16 +7665,7 @@ main.container {
             Privacy Policy
           </button>
         </div>
-      </div>
 
-      <div class="footer-right-col">
-        <div class="footer-attribution">
-          <span>Maintained by</span>
-          <a href="https://janitorai.com/profiles/20394fdf-c461-468d-a720-db53940be487_profile-of-lucid-67" target="_blank" rel="noopener noreferrer" class="lucid-hover-link">
-            Lucid
-            <span class="animated-underline"></span>
-          </a>
-        </div>
         <div class="footer-copy">
           100% Client-Side • Zero Data Retention • SillyTavern V2 Spec
         </div>
@@ -7489,7 +7820,27 @@ main.container {
       </div>
       <div class="modal-dialog-body" style="font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary);">
         <p>Your session token allows the exporter to read your characters, private bots, and lorebooks without saving or logging anything.</p>
-        <ol style="margin-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+
+        <!-- Instant Console Command Box -->
+        <div class="token-snippet-box">
+          <div class="token-snippet-header">
+            <div class="token-snippet-tag">
+              <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Instant Console Command</span>
+            </div>
+            <button type="button" class="snippet-copy-btn" onclick="app.copyTokenSnippet(this)">
+              <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Command</span>
+            </button>
+          </div>
+          <p class="token-snippet-desc">
+            On <strong>janitorai.com</strong>, press <strong>F12</strong> (or Inspect), open the <strong>Console</strong>, paste this command, and press Enter:
+          </p>
+          <pre class="token-snippet-code" id="token-console-code"><code>copy(JSON.parse(localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token'))?.access_token || localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token') || '')</code></pre>
+        </div>
+
+        <div style="font-weight: 600; color: var(--text-primary); margin-top: 10px; margin-bottom: 4px;">Or find it manually:</div>
+        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 6px;">
           <li>Log into <strong>janitorai.com</strong> in your browser.</li>
           <li>Press <strong>F12</strong> (or right-click and select <em>Inspect</em>).</li>
           <li>Go to the <strong>Application</strong> tab (or <strong>Storage</strong> in Firefox).</li>
@@ -7730,6 +8081,20 @@ class ExportApp {
         this.closeDownloadModal();
       }
     });
+
+    // 5. Dismiss Fullscreen Kinetic Splash Loader
+    const dismissSplash = () => {
+      const splash = document.getElementById('app-splash-loader');
+      if (splash && !splash.classList.contains('is-hidden')) {
+        splash.classList.add('is-hidden');
+      }
+    };
+    if (document.readyState === 'complete') {
+      setTimeout(dismissSplash, 400);
+    } else {
+      window.addEventListener('load', () => setTimeout(dismissSplash, 350));
+      setTimeout(dismissSplash, 1200);
+    }
   }
 
   toggleTheme() {
@@ -7756,6 +8121,14 @@ class ExportApp {
     const mBtnCss = document.getElementById('m-nav-btn-css');
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
+
+    // Animate footer during tab switch
+    const footer = document.querySelector('.dominion-footer');
+    if (footer) {
+      footer.classList.remove('footer-animate');
+      void footer.offsetWidth;
+      footer.classList.add('footer-animate');
+    }
 
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
@@ -7802,7 +8175,7 @@ class ExportApp {
         });
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 140);
+    }, 180);
   }
 
   setExportFormat(fmt) {
@@ -7868,6 +8241,28 @@ class ExportApp {
   closeTokenHelp() {
     const modal = document.getElementById('token-help-modal');
     if (modal) modal.classList.remove('is-active');
+  }
+
+  copyTokenSnippet(btn) {
+    const code = document.getElementById('token-console-code');
+    const textToCopy = code ? code.innerText.trim() : "copy(JSON.parse(localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token'))?.access_token || localStorage.getItem('sb-mcmzxtzommpnxkynddbo-auth-token') || '')";
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      if (btn) {
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `
+          <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Copied!</span>
+        `;
+        btn.classList.add('btn-copied');
+        setTimeout(() => {
+          btn.innerHTML = origHtml;
+          btn.classList.remove('btn-copied');
+        }, 2200);
+      }
+      this.showToast("Console command copied to clipboard!");
+    }).catch(() => {
+      this.showToast("Could not copy command to clipboard", "error");
+    });
   }
 
   openPrivacyModal() {
