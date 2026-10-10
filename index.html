@@ -5829,24 +5829,26 @@
 }
 
 .css-editor-header {
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
 }
 
 .css-tabs-row {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 2px;
-  max-width: 100%;
+  width: 100%;
 }
 .css-tabs-row::-webkit-scrollbar {
   display: none;
@@ -5854,7 +5856,7 @@
 
 .css-tab-btn {
   height: 32px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: var(--radius-full);
   border: 1px solid transparent;
   background: transparent;
@@ -5866,6 +5868,8 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 6px;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -5892,6 +5896,7 @@
   opacity: 1;
   width: 100%;
   box-sizing: border-box;
+  text-align: center;
   transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
@@ -5911,27 +5916,37 @@
 
 .css-toolbar-actions {
   display: flex;
+  justify-content: center;
   gap: 6px;
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .css-editor-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 8px 10px;
   }
   .css-tabs-row {
     width: 100%;
-  }
-  .css-toolbar-actions {
-    width: 100%;
+    justify-content: center;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .css-toolbar-actions {
+    width: 100%;
+    justify-content: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: wrap;
+    gap: 6px;
     padding-bottom: 2px;
   }
   .css-toolbar-actions::-webkit-scrollbar {
@@ -5949,7 +5964,7 @@
   line-height: 1.65;
   color: #e4e4e7;
   background: #09090b;
-  padding: var(--space-4);
+  padding: var(--space-6) var(--space-4);
   max-height: 520px;
   overflow-y: auto;
   overflow-x: auto;
@@ -5959,6 +5974,7 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  text-align: center;
 }
 .css-preview-iframe {
   width: 100%;
@@ -6456,19 +6472,21 @@
   }
   .css-editor-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
   }
   .css-tabs-row {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 6px;
   }
-  .css-editor-actions {
+  .css-editor-actions, .css-toolbar-actions {
     width: 100%;
+    justify-content: center;
   }
 }
 
@@ -7699,21 +7717,21 @@ main.container {
       <div id="css-editor-container" class="css-editor-container">
         <div class="css-editor-header">
           <div class="css-tabs-row">
-            <button class="css-tab-btn is-active" id="css-subtab-code" onclick="app.switchCssSubtab('code')" title="View CSS Stylesheet">
-              <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              <span>CSS</span>
-            </button>
-            <button class="css-tab-btn" id="css-subtab-preview" onclick="app.switchCssSubtab('preview')" title="Live Profile Preview">
+            <button class="css-tab-btn is-active" id="css-subtab-preview" onclick="app.switchCssSubtab('preview')" title="Live Profile Preview">
               <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <span>Preview</span>
             </button>
+            <button class="css-tab-btn" id="css-subtab-code" onclick="app.switchCssSubtab('code')" title="View CSS Stylesheet">
+              <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>CSS</span>
+            </button>
             <button class="css-tab-btn" id="css-subtab-html" onclick="app.switchCssSubtab('html')" title="View HTML Divs">
               <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-              <span>HTML & Divs</span>
+              <span>HTML</span>
             </button>
             <button class="css-tab-btn" id="css-subtab-txt" onclick="app.switchCssSubtab('txt')" title="View Plain Text Bio">
               <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span>Plain Text</span>
+              <span>TXT</span>
             </button>
             <button class="css-tab-btn" id="css-subtab-assets" onclick="app.switchCssSubtab('assets')" title="Extracted Color Palette">
               <svg class="ui-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
@@ -7729,13 +7747,13 @@ main.container {
           </div>
         </div>
 
-        <!-- Subtab 1: CSS Code View -->
-        <div id="css-pane-code" class="css-pane css-code-view">/* Extracted CSS will appear here. Paste a Janitor profile link above to extract. */</div>
-
-        <!-- Subtab 2: Sandbox Preview -->
-        <div id="css-pane-preview" class="css-pane" style="display: none;">
+        <!-- Subtab 1: Sandbox Preview (Active by default) -->
+        <div id="css-pane-preview" class="css-pane">
           <iframe id="css-preview-iframe" class="css-preview-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
         </div>
+
+        <!-- Subtab 2: CSS Code View -->
+        <div id="css-pane-code" class="css-pane css-code-view" style="display: none;">/* Extracted CSS will appear here. Paste a Janitor profile link above to extract. */</div>
 
         <!-- Subtab 3: HTML & Divs View -->
         <div id="css-pane-html" class="css-pane css-code-view" style="display: none;">&lt;!-- Extracted HTML divs will appear here. --&gt;</div>
@@ -7744,10 +7762,10 @@ main.container {
         <div id="css-pane-txt" class="css-pane css-code-view" style="display: none;">No plain text extracted yet.</div>
 
         <!-- Subtab 5: Palette & Assets -->
-        <div id="css-pane-assets" class="css-pane" style="display: none; padding: var(--space-4);">
-          <div style="font-size: var(--text-xs); font-weight: 700; margin-bottom: var(--space-2); color: var(--text-primary);">Extracted Color Palette</div>
-          <div id="css-swatches-grid" class="swatches-grid">
-            <div style="color: var(--text-muted); font-size: var(--text-xs); padding: var(--space-2);">No color swatches extracted yet.</div>
+        <div id="css-pane-assets" class="css-pane" style="display: none; padding: var(--space-6) var(--space-4); text-align: center;">
+          <div style="font-size: var(--text-xs); font-weight: 700; margin-bottom: var(--space-3); color: var(--text-primary); text-align: center;">Extracted Color Palette</div>
+          <div id="css-swatches-grid" class="swatches-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+            <div style="color: var(--text-muted); font-size: var(--text-xs); padding: var(--space-2); text-align: center; width: 100%;">No color swatches extracted yet.</div>
           </div>
         </div>
       </div>
@@ -8177,7 +8195,7 @@ class ExportApp {
     this.extractedHtml = '';
     this.extractedFullDoc = '';
     this.extractedTxt = '';
-    this.activeCssSubtab = 'code';
+    this.activeCssSubtab = 'preview';
   }
 
   init() {
@@ -8226,6 +8244,9 @@ class ExportApp {
       window.addEventListener('load', triggerDismiss);
       setTimeout(dismissSplash, 2500);
     }
+
+    // 6. Initialize CSS studio preview placeholder
+    this.switchCssSubtab('preview');
   }
 
   toggleTheme() {
@@ -9821,17 +9842,17 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
       `).join('');
     }
 
-    this.switchCssSubtab(this.activeCssSubtab || 'code');
+    this.switchCssSubtab(this.activeCssSubtab || 'preview');
   }
 
   switchCssSubtab(subtab) {
     if (this.activeCssSubtab === subtab && this._cssSubtabReady) return;
     this._cssSubtabReady = true;
 
-    const prevSubtab = this.activeCssSubtab || 'code';
+    const prevSubtab = this.activeCssSubtab || 'preview';
     this.activeCssSubtab = subtab;
 
-    const tabs = ['code', 'preview', 'html', 'txt', 'assets'];
+    const tabs = ['preview', 'code', 'html', 'txt', 'assets'];
     tabs.forEach(t => {
       const btn = document.getElementById(`css-subtab-${t}`);
       if (btn) btn.classList.toggle('is-active', t === subtab);
@@ -9859,7 +9880,7 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
         const bg = isLight ? '#f4f4f5' : '#09090b';
         const textH = isLight ? '#18181b' : '#f4f4f6';
         const textP = isLight ? '#71717a' : '#a1a1aa';
-        const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:60px 20px;background:${bg};color:${textP};font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;}h3{color:${textH};margin-bottom:8px;font-size:16px;}p{font-size:13px;max-width:380px;margin:0 auto;line-height:1.5;}</style></head><body><h3>Profile Live Preview</h3><p>Paste a Janitor profile link above to live preview custom CSS and bio layout.</p></body></html>`;
+        const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:80px 20px;background:${bg};color:${textP};font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;}h3{color:${textH};margin-bottom:8px;font-size:16px;text-align:center;}p{font-size:13px;max-width:380px;margin:0 auto;line-height:1.5;text-align:center;}</style></head><body><h3>Profile Live Preview</h3><p>Paste a Janitor profile link above to live preview custom CSS and bio layout.</p></body></html>`;
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         if (iframeDoc) { iframeDoc.open(); iframeDoc.write(doc); iframeDoc.close(); }
       }
@@ -9899,8 +9920,12 @@ resolveAvatarUrl(itemOrAvatar, type = 'bot') {
     let payload = this.extractedCss;
     if (this.activeCssSubtab === 'html') payload = this.extractedHtml;
     else if (this.activeCssSubtab === 'txt') payload = this.extractedTxt;
+    else if (this.activeCssSubtab === 'preview') payload = this.extractedFullDoc || this.extractedCss;
 
-    if (!payload) return;
+    if (!payload) {
+      this.showToast(`No ${this.activeCssSubtab.toUpperCase()} extracted to copy yet.`);
+      return;
+    }
     navigator.clipboard.writeText(payload);
     this.showToast(`Copied ${this.activeCssSubtab.toUpperCase()} to clipboard!`);
   }

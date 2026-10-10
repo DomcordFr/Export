@@ -5792,24 +5792,26 @@
 }
 
 .css-editor-header {
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
 }
 
 .css-tabs-row {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 2px;
-  max-width: 100%;
+  width: 100%;
 }
 .css-tabs-row::-webkit-scrollbar {
   display: none;
@@ -5817,7 +5819,7 @@
 
 .css-tab-btn {
   height: 32px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: var(--radius-full);
   border: 1px solid transparent;
   background: transparent;
@@ -5829,6 +5831,8 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 6px;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -5855,6 +5859,7 @@
   opacity: 1;
   width: 100%;
   box-sizing: border-box;
+  text-align: center;
   transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
@@ -5874,27 +5879,37 @@
 
 .css-toolbar-actions {
   display: flex;
+  justify-content: center;
   gap: 6px;
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .css-editor-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 8px 10px;
   }
   .css-tabs-row {
     width: 100%;
-  }
-  .css-toolbar-actions {
-    width: 100%;
+    justify-content: center;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .css-toolbar-actions {
+    width: 100%;
+    justify-content: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: wrap;
+    gap: 6px;
     padding-bottom: 2px;
   }
   .css-toolbar-actions::-webkit-scrollbar {
@@ -5912,7 +5927,7 @@
   line-height: 1.65;
   color: #e4e4e7;
   background: #09090b;
-  padding: var(--space-4);
+  padding: var(--space-6) var(--space-4);
   max-height: 520px;
   overflow-y: auto;
   overflow-x: auto;
@@ -5922,6 +5937,7 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  text-align: center;
 }
 .css-preview-iframe {
   width: 100%;
@@ -6419,19 +6435,21 @@
   }
   .css-editor-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
   }
   .css-tabs-row {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 6px;
   }
-  .css-editor-actions {
+  .css-editor-actions, .css-toolbar-actions {
     width: 100%;
+    justify-content: center;
   }
 }
 
