@@ -5261,27 +5261,29 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-/* View Panels Smooth Transition (No Vertical Shift to Guarantee Mobile Width Stability) */
+/* View Panels Luxurious Slow Smooth Fade In / Fade Out */
 .view-panel {
   opacity: 1;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: opacity 0.16s ease;
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .view-panel.is-hidden {
   display: none !important;
 }
 
-.view-panel.is-entering {
-  opacity: 0 !important;
-}
-
-.view-panel.is-leaving {
+.view-panel.is-fading-out {
   opacity: 0 !important;
   pointer-events: none !important;
+  transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.view-panel.is-fading-in {
+  opacity: 0 !important;
+  transition: none !important;
 }
 
 /* Vault Hero & Form Panel */
@@ -7083,7 +7085,7 @@ main.container {
   justify-content: center;
   overflow: hidden;
   pointer-events: auto;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.75s;
 }
 
 .app-splash-loader.is-hidden {
@@ -7100,11 +7102,11 @@ main.container {
   background: radial-gradient(ellipse 320px 240px at center, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.015) 50%, transparent 70%);
   filter: blur(20px);
   pointer-events: none;
-  animation: splashBloomPulse 3s ease-in-out infinite alternate;
+  animation: splashBloomPulse 4.5s ease-in-out infinite alternate;
 }
 
 @keyframes splashBloomPulse {
-  0% { transform: scale(0.9); opacity: 0.7; }
+  0% { transform: scale(0.9); opacity: 0.6; }
   100% { transform: scale(1.15); opacity: 1; }
 }
 
@@ -7126,12 +7128,12 @@ main.container {
   align-items: center;
   justify-content: center;
   margin: 0 auto var(--space-6);
-  animation: splashIconFloat 3.2s ease-in-out infinite;
+  animation: splashIconFloat 4.8s ease-in-out infinite;
 }
 
 @keyframes splashIconFloat {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-7px); }
 }
 
 .splash-icon-glow {
@@ -7141,17 +7143,17 @@ main.container {
   background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, transparent 70%);
   filter: blur(14px);
   pointer-events: none;
-  animation: splashGlowPulse 2.4s ease-in-out infinite alternate;
+  animation: splashGlowPulse 4.2s ease-in-out infinite alternate;
 }
 
 @keyframes splashGlowPulse {
-  0% { transform: scale(0.85); opacity: 0.5; }
-  100% { transform: scale(1.2); opacity: 1; }
+  0% { transform: scale(0.85); opacity: 0.45; }
+  100% { transform: scale(1.25); opacity: 1; }
 }
 
 .splash-dominion-icon {
-  width: 72px;
-  height: 72px;
+  width: 76px;
+  height: 76px;
   overflow: visible !important;
   color: #FFFFFF;
   display: block;
@@ -7170,21 +7172,21 @@ main.container {
   stroke: #FFFFFF;
   fill: rgba(255, 255, 255, 0.12);
   filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.35));
-  animation: splashPlateTopAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  animation: splashPlateTopAnim 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Middle polyline chevron plate */
 .splash-plate-mid {
   stroke: #E4E4E7;
   opacity: 0.88;
-  animation: splashPlateMidAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  animation: splashPlateMidAnim 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Bottom polyline chevron plate */
 .splash-plate-bot {
   stroke: #A1A1AA;
   opacity: 0.72;
-  animation: splashPlateBotAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  animation: splashPlateBotAnim 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes splashPlateTopAnim {
@@ -7195,10 +7197,10 @@ main.container {
     filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.2));
   }
   50% {
-    transform: translateY(-7px);
+    transform: translateY(-8px);
     stroke: #FFFFFF;
     fill: rgba(255, 255, 255, 0.25);
-    filter: drop-shadow(0 4px 14px rgba(255, 255, 255, 0.6));
+    filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.65));
   }
 }
 
@@ -7223,10 +7225,10 @@ main.container {
     stroke: #8E8E93;
   }
   50% {
-    transform: translateY(7px);
+    transform: translateY(8px);
     opacity: 0.95;
     stroke: #D4D4D8;
-    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
+    filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.25));
   }
 }
 
@@ -7261,7 +7263,7 @@ main.container {
   height: 100%;
   width: 45%;
   background: linear-gradient(90deg, transparent, #ffffff, transparent);
-  animation: splashMeterScan 1.6s ease-in-out infinite;
+  animation: splashMeterScan 3.2s ease-in-out infinite;
 }
 
 @keyframes splashMeterScan {
@@ -8151,18 +8153,25 @@ class ExportApp {
       }
     });
 
-    // 5. Dismiss Fullscreen Kinetic Splash Loader
+    // 5. Dismiss Fullscreen Kinetic Splash Loader (Slow, Graceful & Cinematic)
     const dismissSplash = () => {
       const splash = document.getElementById('app-splash-loader');
       if (splash && !splash.classList.contains('is-hidden')) {
         splash.classList.add('is-hidden');
       }
     };
+    const minSplashDuration = 1500;
+    const splashStartTime = performance.now();
+    const triggerDismiss = () => {
+      const elapsed = performance.now() - splashStartTime;
+      const remaining = Math.max(0, minSplashDuration - elapsed);
+      setTimeout(dismissSplash, remaining);
+    };
     if (document.readyState === 'complete') {
-      setTimeout(dismissSplash, 400);
+      triggerDismiss();
     } else {
-      window.addEventListener('load', () => setTimeout(dismissSplash, 350));
-      setTimeout(dismissSplash, 1200);
+      window.addEventListener('load', triggerDismiss);
+      setTimeout(dismissSplash, 2500);
     }
   }
 
@@ -8191,14 +8200,6 @@ class ExportApp {
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
 
-    // Animate footer during tab switch
-    const footer = document.querySelector('.dominion-footer');
-    if (footer) {
-      footer.classList.remove('footer-animate');
-      void footer.offsetWidth;
-      footer.classList.add('footer-animate');
-    }
-
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
     const currentView = tab === 'vault' ? viewVault : viewCss;
@@ -8206,25 +8207,61 @@ class ExportApp {
 
     if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
 
-    if (leavingView) {
+    // Initial load check
+    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
+      if (leavingView) {
+        leavingView.classList.add('is-hidden');
+        leavingView.style.display = 'none';
+      }
+      if (currentView) {
+        currentView.style.display = '';
+        currentView.classList.remove('is-hidden', 'is-fading-out');
+        currentView.classList.add('is-fading-in');
+        void currentView.offsetWidth;
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-fading-in');
+        });
+      }
+      return;
+    }
+
+    // Step 1: Slow, smooth fade-out of departing view
+    leavingView.classList.remove('is-fading-in');
+    leavingView.classList.add('is-fading-out');
+
+    // Smoothly dim footer during tab dissolve
+    const footer = document.querySelector('.dominion-footer');
+    if (footer) {
+      footer.style.transition = 'opacity 0.28s ease';
+      footer.style.opacity = '0.35';
+    }
+
+    this._tabTransitionTimeout = setTimeout(() => {
+      // Step 2: Swap display states once fully transparent
       leavingView.classList.add('is-hidden');
-      leavingView.classList.remove('is-entering', 'is-leaving');
+      leavingView.classList.remove('is-fading-out');
       leavingView.style.display = 'none';
-    }
 
-    if (currentView) {
-      currentView.style.display = '';
-      currentView.classList.remove('is-hidden', 'is-leaving');
-      currentView.classList.add('is-entering');
+      window.scrollTo(0, 0);
 
-      void currentView.offsetWidth; // Force reflow
+      // Step 3: Slow, smooth fade-in of arriving view
+      if (currentView) {
+        currentView.style.display = '';
+        currentView.classList.remove('is-hidden', 'is-fading-out');
+        currentView.classList.add('is-fading-in');
 
-      requestAnimationFrame(() => {
-        currentView.classList.remove('is-entering');
-      });
-    }
+        void currentView.offsetWidth; // Force reflow to commit opacity: 0
 
-    window.scrollTo(0, 0);
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-fading-in');
+        });
+      }
+
+      if (footer) {
+        footer.style.transition = 'opacity 0.38s ease';
+        footer.style.opacity = '1';
+      }
+    }, 320);
   }
 
   setExportFormat(fmt) {

@@ -122,18 +122,25 @@ class ExportApp {
       }
     });
 
-    // 5. Dismiss Fullscreen Kinetic Splash Loader
+    // 5. Dismiss Fullscreen Kinetic Splash Loader (Slow, Graceful & Cinematic)
     const dismissSplash = () => {
       const splash = document.getElementById('app-splash-loader');
       if (splash && !splash.classList.contains('is-hidden')) {
         splash.classList.add('is-hidden');
       }
     };
+    const minSplashDuration = 1500;
+    const splashStartTime = performance.now();
+    const triggerDismiss = () => {
+      const elapsed = performance.now() - splashStartTime;
+      const remaining = Math.max(0, minSplashDuration - elapsed);
+      setTimeout(dismissSplash, remaining);
+    };
     if (document.readyState === 'complete') {
-      setTimeout(dismissSplash, 400);
+      triggerDismiss();
     } else {
-      window.addEventListener('load', () => setTimeout(dismissSplash, 350));
-      setTimeout(dismissSplash, 1200);
+      window.addEventListener('load', triggerDismiss);
+      setTimeout(dismissSplash, 2500);
     }
   }
 
@@ -162,14 +169,6 @@ class ExportApp {
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
 
-    // Animate footer during tab switch
-    const footer = document.querySelector('.dominion-footer');
-    if (footer) {
-      footer.classList.remove('footer-animate');
-      void footer.offsetWidth;
-      footer.classList.add('footer-animate');
-    }
-
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
     const currentView = tab === 'vault' ? viewVault : viewCss;
@@ -177,25 +176,61 @@ class ExportApp {
 
     if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
 
-    if (leavingView) {
+    // Initial load check
+    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
+      if (leavingView) {
+        leavingView.classList.add('is-hidden');
+        leavingView.style.display = 'none';
+      }
+      if (currentView) {
+        currentView.style.display = '';
+        currentView.classList.remove('is-hidden', 'is-fading-out');
+        currentView.classList.add('is-fading-in');
+        void currentView.offsetWidth;
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-fading-in');
+        });
+      }
+      return;
+    }
+
+    // Step 1: Slow, smooth fade-out of departing view
+    leavingView.classList.remove('is-fading-in');
+    leavingView.classList.add('is-fading-out');
+
+    // Smoothly dim footer during tab dissolve
+    const footer = document.querySelector('.dominion-footer');
+    if (footer) {
+      footer.style.transition = 'opacity 0.28s ease';
+      footer.style.opacity = '0.35';
+    }
+
+    this._tabTransitionTimeout = setTimeout(() => {
+      // Step 2: Swap display states once fully transparent
       leavingView.classList.add('is-hidden');
-      leavingView.classList.remove('is-entering', 'is-leaving');
+      leavingView.classList.remove('is-fading-out');
       leavingView.style.display = 'none';
-    }
 
-    if (currentView) {
-      currentView.style.display = '';
-      currentView.classList.remove('is-hidden', 'is-leaving');
-      currentView.classList.add('is-entering');
+      window.scrollTo(0, 0);
 
-      void currentView.offsetWidth; // Force reflow
+      // Step 3: Slow, smooth fade-in of arriving view
+      if (currentView) {
+        currentView.style.display = '';
+        currentView.classList.remove('is-hidden', 'is-fading-out');
+        currentView.classList.add('is-fading-in');
 
-      requestAnimationFrame(() => {
-        currentView.classList.remove('is-entering');
-      });
-    }
+        void currentView.offsetWidth; // Force reflow to commit opacity: 0
 
-    window.scrollTo(0, 0);
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-fading-in');
+        });
+      }
+
+      if (footer) {
+        footer.style.transition = 'opacity 0.38s ease';
+        footer.style.opacity = '1';
+      }
+    }, 320);
   }
 
   setExportFormat(fmt) {
