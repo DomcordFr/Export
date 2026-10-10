@@ -40,8 +40,16 @@ class ExportApp {
     this.items = [];
     this.selectedIds = new Set();
     this.currentFilter = 'all';
+    this.exportFormat = 'png'; // 'png', 'json', or 'both'
     this.currentModalBot = null;
+
+    // CSS Studio Data
+    this.currentProfile = null;
     this.extractedCss = '';
+    this.extractedHtml = '';
+    this.extractedFullDoc = '';
+    this.extractedTxt = '';
+    this.activeCssSubtab = 'code';
   }
 
   init() {
@@ -57,8 +65,8 @@ class ExportApp {
       if (input) input.value = savedTok;
     }
 
-    // 3. Load initial sample cards immediately
-    this.loadDemoVault();
+    // 3. Render initial empty vault state (zero mock data)
+    this.renderVault();
   }
 
   toggleTheme() {
@@ -93,6 +101,15 @@ class ExportApp {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  setExportFormat(fmt) {
+    this.exportFormat = fmt;
+    ['png', 'json', 'both'].forEach(f => {
+      const btn = document.getElementById(`fmt-btn-${f}`);
+      if (btn) btn.classList.toggle('is-active', f === fmt);
+    });
+    this.showToast(`Export format set to ${fmt.toUpperCase()}`);
+  }
+
   toggleScope(scopeId) {
     const input = document.getElementById(`scope-${scopeId}`);
     const card = document.getElementById(`scope-card-${scopeId}`);
@@ -105,7 +122,11 @@ class ExportApp {
   onTokenInput() {
     const input = document.getElementById('token-input');
     if (!input) return;
-    const val = input.value.trim();
+    let val = input.value.trim();
+    if (val.startsWith('Bearer ')) {
+      val = val.slice(7).trim();
+      input.value = val;
+    }
     this.token = val;
     sessionStorage.setItem('export_session_jwt', val);
   }
@@ -123,7 +144,9 @@ class ExportApp {
       if (text) {
         const input = document.getElementById('token-input');
         if (input) {
-          input.value = text.trim();
+          let cleaned = text.trim();
+          if (cleaned.startsWith('Bearer ')) cleaned = cleaned.slice(7).trim();
+          input.value = cleaned;
           this.onTokenInput();
           this.showToast("Token pasted from clipboard");
         }
@@ -175,85 +198,11 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     DEMO SAMPLE VAULT
-     ========================================================================== */
-  loadDemoVault() {
-    this.switchTab('vault');
-    const demoBots = [
-      {
-        id: 'caroline-nicole',
-        name: "Your Two Mother's | Caroline & Nicole",
-        category: 'PRIVATE',
-        is_public: false,
-        _type: 'character',
-        avatar: 'https://ella.janitorai.com/bot-avatars/71fb2b72-243e-4fa0-8f9f-0c46522c0ff5.png',
-        creatorName: 'Caroline',
-        creatorAvatar: 'https://ella.janitorai.com/bot-avatars/71fb2b72-243e-4fa0-8f9f-0c46522c0ff5.png',
-        tokens: 2840,
-        chats: 412000,
-        tags: ['Family', 'Drama', 'Wholesome', 'Slice of Life'],
-        description: 'Caroline (39) and Nicole (38) are your protective, devoted mothers navigating life together with quiet elegance.',
-        first_message: 'The soft chime of dinnerware resonates through the warm kitchen. Nicole looks up from the stove with a gentle smile while Caroline reviews papers at the counter.'
-      },
-      {
-        id: 'evelyn-noir',
-        name: 'Evelyn — Obsidian Vanguard',
-        category: 'PUBLIC',
-        is_public: true,
-        _type: 'character',
-        avatar: 'https://ella.janitorai.com/bot-avatars/evelyn.png',
-        creatorName: 'Nocturne',
-        creatorAvatar: DEFAULT_AVATAR,
-        tokens: 3410,
-        chats: 890000,
-        tags: ['Cyberpunk', 'Action', 'Cold', 'Loyal'],
-        description: 'High-ranking operative in the void surveillance division. Ruthless to enemies, intensely protective of her partner.',
-        first_message: 'Rain taps ceaselessly against the armored glass of the skybridge. Evelyn stands motionless, her neon-lit trenchcoat swaying slightly in the draft.'
-      },
-      {
-        id: 'lorebook-nexus',
-        name: 'Aethelgard Codex & World Lore',
-        category: 'LOREBOOK',
-        is_public: true,
-        _type: 'lorebook',
-        avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3Ctext x="50" y="55" font-size="14" fill="%23a1a1ab" text-anchor="middle" font-family="sans-serif"%3ELOREBOOK%3C/text%3E%3C/svg%3E',
-        creatorName: 'Archivist',
-        creatorAvatar: DEFAULT_AVATAR,
-        tokens: 1250,
-        chats: 15400,
-        tags: ['Fantasy', 'Lore', 'Worldbuilding'],
-        description: 'Comprehensive historical entries, faction dynamics, and arcane regulations across the seven realms.',
-        first_message: 'The scrolls illuminate forgotten treaties and silent oaths.'
-      },
-      {
-        id: 'persona-detective',
-        name: 'Detective Sterling (Persona)',
-        category: 'PERSONA',
-        is_public: false,
-        _type: 'persona',
-        avatar: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23242433"/%3E%3Ctext x="50" y="55" font-size="14" fill="%23a1a1ab" text-anchor="middle" font-family="sans-serif"%3EPERSONA%3C/text%3E%3C/svg%3E',
-        creatorName: 'Self',
-        creatorAvatar: DEFAULT_AVATAR,
-        tokens: 420,
-        chats: 8400,
-        tags: ['Detective', 'Persona', 'User'],
-        description: 'Calm, observant investigator specializing in anomalous incidents and covert negotiations.',
-        first_message: 'A match flares in the shadow of the doorway.'
-      }
-    ];
-
-    this.items = demoBots;
-    this.selectedIds = new Set(demoBots.map(b => b.id));
-    this.renderVault();
-    this.showToast("Loaded sample demo cards");
-  }
-
-  /* ==========================================================================
-     SCAN ACCOUNT (WITH ANIMATED SKELETON CARDS)
+     SCAN ACCOUNT (LIVE API DISCOVERY)
      ========================================================================== */
   async scanAccount() {
     if (!this.token) {
-      this.showToast("Please paste your JanitorAI session token first", "error");
+      this.showToast("Please paste your Janitor session token first", "error");
       const input = document.getElementById('token-input');
       if (input) input.focus();
       return;
@@ -265,7 +214,7 @@ class ExportApp {
       scanBtn.innerHTML = `<span>Connecting to Hampter...</span>`;
     }
 
-    // Render skeleton placeholders in the grid
+    // Render animated skeleton cards
     const grid = document.getElementById('bot-cards-grid');
     if (grid) {
       grid.innerHTML = Array.from({ length: 6 }, () => '<div class="bot-card-skeleton"></div>').join('');
@@ -292,7 +241,12 @@ class ExportApp {
       while (keepGoing) {
         const url = this.getApiUrl(`characters/v2/mine?page=${page}`);
         const res = await fetch(url, { headers: this.getHeaders() });
-        if (!res.ok) break;
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            throw new Error("Invalid or expired session token. Please verify token.");
+          }
+          break;
+        }
 
         const json = await res.json();
         const list = json.data || [];
@@ -353,19 +307,22 @@ class ExportApp {
 
       this.updateProgress(100, `Complete! Found ${discovered.length} items.`, 3);
 
+      this.items = discovered;
+      this.selectedIds = new Set(discovered.map(b => b.id));
+      this.renderVault();
+
       if (discovered.length === 0) {
-        this.showToast("No items found under chosen scopes. Loading sample demo.", "error");
-        this.loadDemoVault();
+        this.showToast("No items found under chosen scopes.", "info");
       } else {
-        this.items = discovered;
-        this.selectedIds = new Set(discovered.map(b => b.id));
-        this.renderVault();
-        this.showToast(`Loaded ${discovered.length} items from your account`);
+        this.showToast(`Loaded ${discovered.length} items from your account!`);
       }
 
     } catch (err) {
       console.error("Scan failure:", err);
       this.showToast(`Scan error: ${err.message}`, "error");
+      this.items = [];
+      this.selectedIds.clear();
+      this.renderVault();
     } finally {
       if (scanBtn) {
         scanBtn.disabled = false;
@@ -383,6 +340,26 @@ class ExportApp {
      ========================================================================== */
   renderVault() {
     const toolbar = document.getElementById('vault-toolbar-section');
+
+    if (this.items.length === 0) {
+      if (toolbar) toolbar.style.display = 'none';
+      const grid = document.getElementById('bot-cards-grid');
+      if (grid) {
+        grid.innerHTML = `
+          <div class="vault-empty-card">
+            <div class="vault-empty-icon">
+              <svg style="width: 28px; height: 28px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+            </div>
+            <div class="vault-empty-title">Your Vault is Empty</div>
+            <p class="vault-empty-desc">
+              Paste your Janitor session token above and click <strong>Scan Account & Load Vault</strong> to discover and export your characters, private bots, lorebooks, and personas.
+            </p>
+          </div>
+        `;
+      }
+      return;
+    }
+
     if (toolbar) toolbar.style.display = 'block';
 
     const totalAll = this.items.length;
@@ -477,7 +454,7 @@ class ExportApp {
             <button class="card-action-btn card-select-btn ${isSelected ? 'is-checked' : ''}" title="${isSelected ? 'Deselect item' : 'Select item'}" onclick="event.stopPropagation(); app.toggleSelect('${bot.id}');">
               ${isSelected ? ICONS_SVG.checkSquare : ICONS_SVG.square}
             </button>
-            <button class="card-action-btn" title="Download SillyTavern Card" onclick="event.stopPropagation(); app.downloadSingleCard('${bot.id}');">
+            <button class="card-action-btn" title="Quick Download" onclick="event.stopPropagation(); app.downloadSingleCard('${bot.id}');">
               ${ICONS_SVG.download}
             </button>
           </div>
@@ -573,14 +550,8 @@ class ExportApp {
     this.currentModalBot = null;
   }
 
-  async downloadCurrentModalCard() {
-    if (this.currentModalBot) {
-      await this.downloadSingleCard(this.currentModalBot.id);
-    }
-  }
-
   /* ==========================================================================
-     AUTHENTIC DOWNLOAD POPUP MODAL CONTROLLER
+     DOWNLOAD POPUP MODAL CONTROLLER
      ========================================================================== */
   openDownloadModal(title, thumb, name, sub) {
     const modal = document.getElementById('download-progress-modal');
@@ -591,7 +562,6 @@ class ExportApp {
     document.getElementById('dl-preview-name').innerText = name || 'Item';
     document.getElementById('dl-preview-sub').innerText = sub || 'SillyTavern V2 PNG • Chara Chunk';
 
-    // Reset animations
     document.getElementById('dl-deck-loader').style.display = 'block';
     document.getElementById('dl-success-icon').style.display = 'none';
     document.getElementById('dl-modal-footer').style.display = 'none';
@@ -634,7 +604,6 @@ class ExportApp {
       if (stepRow) stepRow.classList.add('is-done');
     }
 
-    // Switch Deck Loader to Animated Success Circle
     document.getElementById('dl-deck-loader').style.display = 'none';
     document.getElementById('dl-success-icon').style.display = 'flex';
     document.getElementById('dl-preview-sub').innerText = sub || 'Ready for SillyTavern';
@@ -647,11 +616,29 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     SINGLE CARD DOWNLOAD (WIRED TO DOWNLOAD POPUP MODAL)
+     FULL BOT HYDRATION
      ========================================================================== */
-  async downloadSingleCard(id) {
+  async fetchFullBotData(botId) {
+    try {
+      const res = await fetch(this.getApiUrl(`characters/${botId}`), { headers: this.getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        return data.data || data;
+      }
+    } catch (e) {
+      console.warn("Could not fetch full bot definition:", e);
+    }
+    return null;
+  }
+
+  /* ==========================================================================
+     SINGLE CARD DOWNLOAD (SUPPORTS PNG, JSON, BOTH)
+     ========================================================================== */
+  async downloadSingleCard(id, explicitFormat = null) {
     const bot = this.items.find(b => b.id === id);
     if (!bot) return;
+
+    const fmt = explicitFormat || this.exportFormat || 'png';
 
     let avatarUrl = bot.avatar || DEFAULT_AVATAR;
     if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
@@ -660,23 +647,27 @@ class ExportApp {
 
     const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
 
-    // 1. Open the luxury download popup modal!
     this.openDownloadModal(
-      "Compiling Character Card",
+      `Downloading ${bot.name}`,
       avatarUrl,
       bot.name,
-      bot._type === 'character' ? "SillyTavern V2 PNG • Chara Chunk" : `${bot.category} JSON`
+      fmt === 'json' ? "Character V2 JSON" : fmt === 'both' ? "PNG Card + V2 JSON" : "SillyTavern V2 PNG Card"
     );
 
     try {
-      // Step 1: Resolve Metadata & Greetings
       this.updateDownloadModal(25, "Resolving character metadata & greetings...", 1);
-      await new Promise(r => setTimeout(r, 260));
+
+      // Hydrate full definition if missing
+      let fullBot = bot;
+      if (!bot.personality && !bot.first_message && bot._type === 'character') {
+        const live = await this.fetchFullBotData(bot.id);
+        if (live) fullBot = { ...bot, ...live };
+      }
 
       if (bot._type === 'lorebook') {
         this.updateDownloadModal(70, "Packaging Lorebook JSON...", 3);
-        await new Promise(r => setTimeout(r, 200));
-        const jsonStr = JSON.stringify(bot, null, 2);
+        await new Promise(r => setTimeout(r, 180));
+        const jsonStr = JSON.stringify(fullBot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_lorebook.json`);
         this.completeDownloadModal("Lorebook Exported!", "JSON file ready");
         return;
@@ -684,27 +675,53 @@ class ExportApp {
 
       if (bot._type === 'persona') {
         this.updateDownloadModal(70, "Packaging Persona JSON...", 3);
-        await new Promise(r => setTimeout(r, 200));
-        const jsonStr = JSON.stringify(bot, null, 2);
+        await new Promise(r => setTimeout(r, 180));
+        const jsonStr = JSON.stringify(fullBot, null, 2);
         this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
         this.completeDownloadModal("Persona Exported!", "JSON file ready");
         return;
       }
 
-      // Step 2: Convert avatar to lossless PNG canvas
-      this.updateDownloadModal(55, "Fetching & converting high-res avatar to PNG...", 2);
-      const cardV2 = this.buildSillyTavernV2Card(bot);
+      const cardV2 = this.buildSillyTavernV2Card(fullBot);
 
-      // Step 3: Inject SillyTavern V2 chara chunk & CRC32
-      this.updateDownloadModal(82, "Embedding SillyTavern V2 chara chunk & CRC32...", 3);
-      const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
+      // 1. JSON only
+      if (fmt === 'json') {
+        this.updateDownloadModal(75, "Compiling SillyTavern V2 JSON...", 3);
+        await new Promise(r => setTimeout(r, 150));
+        const jsonStr = JSON.stringify(cardV2, null, 2);
+        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_v2.json`);
+        this.completeDownloadModal("JSON Download Complete!", "SillyTavern V2 Specification JSON");
+        this.showToast(`Downloaded "${bot.name}" JSON!`);
+        return;
+      }
 
-      // Step 4: Deliver file download
-      this.updateDownloadModal(100, "Delivering SillyTavern card download...", 4);
-      this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
+      // 2. PNG only
+      if (fmt === 'png') {
+        this.updateDownloadModal(55, "Converting avatar to lossless PNG canvas...", 2);
+        const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
 
-      this.completeDownloadModal("Card Download Complete!", "SillyTavern V2 PNG • Ready to import");
-      this.showToast(`Downloaded "${bot.name}" card!`);
+        this.updateDownloadModal(85, "Embedding SillyTavern V2 chara chunk & CRC32...", 3);
+        this.updateDownloadModal(100, "Delivering SillyTavern card download...", 4);
+        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
+
+        this.completeDownloadModal("Card Download Complete!", "SillyTavern V2 PNG • Ready to import");
+        this.showToast(`Downloaded "${bot.name}" character card!`);
+        return;
+      }
+
+      // 3. Both (PNG + JSON)
+      if (fmt === 'both') {
+        this.updateDownloadModal(50, "Generating PNG card & JSON definition...", 2);
+        const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
+        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
+
+        const jsonStr = JSON.stringify(cardV2, null, 2);
+        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_v2.json`);
+
+        this.completeDownloadModal("Export Complete!", "Both SillyTavern PNG Card & V2 JSON downloaded");
+        this.showToast(`Downloaded "${bot.name}" PNG + JSON!`);
+        return;
+      }
 
     } catch (err) {
       console.error("Single download error:", err);
@@ -714,7 +731,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     BATCH EXPORT SELECTED AS ZIP (WIRED TO DOWNLOAD POPUP MODAL)
+     BATCH EXPORT SELECTED AS ZIP (SUPPORTS PNG, JSON, BOTH)
      ========================================================================== */
   async exportSelectedZip() {
     const selected = this.items.filter(b => this.selectedIds.has(b.id));
@@ -728,12 +745,15 @@ class ExportApp {
       return;
     }
 
+    const fmt = this.exportFormat || 'png';
     const total = selected.length;
+    const formatLabel = fmt === 'json' ? 'JSON' : fmt === 'both' ? 'PNG + JSON' : 'SillyTavern PNG Cards';
+
     this.openDownloadModal(
-      "Compiling SillyTavern Vault (.zip)",
+      `Compiling Vault Archive (.zip)`,
       selected[0]?.avatar || DEFAULT_AVATAR,
       `Vault Archive (${total} Items)`,
-      "SillyTavern Characters & World Info"
+      `${formatLabel} • Compressed ZIP`
     );
 
     try {
@@ -745,22 +765,36 @@ class ExportApp {
       let done = 0;
       for (const item of selected) {
         const safeName = (item.name || "item").replace(/[/\\?%*:|"<>]/g, "_").trim();
-        const pct = Math.round(((done + 1) / total) * 80);
+        const pct = Math.round(((done + 1) / total) * 82);
 
         this.updateDownloadModal(pct, `Compiling ${done + 1} of ${total}: ${item.name}...`, 2);
 
+        // Fetch full definition if missing
+        let fullItem = item;
+        if (!item.personality && !item.first_message && item._type === 'character') {
+          const live = await this.fetchFullBotData(item.id);
+          if (live) fullItem = { ...item, ...live };
+        }
+
         if (item._type === 'lorebook') {
-          loreFolder.file(`${safeName}.json`, JSON.stringify(item, null, 2));
+          loreFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
         } else if (item._type === 'persona') {
-          persFolder.file(`${safeName}.json`, JSON.stringify(item, null, 2));
+          persFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
         } else {
-          let avaUrl = item.avatar;
-          if (avaUrl && !avaUrl.startsWith('http') && !avaUrl.startsWith('data:')) {
-            avaUrl = `https://ella.janitorai.com/bot-avatars/${avaUrl}`;
+          const cardV2 = this.buildSillyTavernV2Card(fullItem);
+
+          if (fmt === 'json' || fmt === 'both') {
+            botsFolder.file(`${safeName}_v2.json`, JSON.stringify(cardV2, null, 2));
           }
-          const cardV2 = this.buildSillyTavernV2Card(item);
-          const pngBuf = await this.compileSillyTavernPngBuffer(cardV2, avaUrl, item.name);
-          botsFolder.file(`${safeName}_v2.card.png`, pngBuf);
+
+          if (fmt === 'png' || fmt === 'both') {
+            let avaUrl = fullItem.avatar;
+            if (avaUrl && !avaUrl.startsWith('http') && !avaUrl.startsWith('data:')) {
+              avaUrl = `https://ella.janitorai.com/bot-avatars/${avaUrl}`;
+            }
+            const pngBuf = await this.compileSillyTavernPngBuffer(cardV2, avaUrl, item.name);
+            botsFolder.file(`${safeName}_v2.card.png`, pngBuf);
+          }
         }
 
         done++;
@@ -772,7 +806,7 @@ class ExportApp {
       const timeStamp = new Date().toISOString().slice(0, 10);
       this.triggerBlobDownload(zipBlob, `SillyTavern_Vault_${timeStamp}.zip`);
 
-      this.completeDownloadModal("Vault Export Complete!", `ZIP file with ${total} items downloaded`);
+      this.completeDownloadModal("Vault Export Complete!", `ZIP file with ${total} items (${formatLabel}) downloaded`);
       this.showToast(`Successfully downloaded ZIP with ${total} items!`);
 
     } catch (err) {
@@ -907,7 +941,7 @@ class ExportApp {
 
   injectCharaChunk(pngArrayBuffer, base64Payload) {
     const u8 = new Uint8Array(pngArrayBuffer);
-    const keyword = "chara ";
+    const keyword = "chara\0";
     const textBytes = new TextEncoder().encode(keyword + base64Payload);
     const dataLen = textBytes.length;
 
@@ -949,7 +983,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     PROFILE CSS STUDIO
+     PROFILE CSS & HTML STUDIO
      ========================================================================== */
   setProfileUrl(url) {
     const input = document.getElementById('css-profile-input');
@@ -964,7 +998,7 @@ class ExportApp {
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
-      this.showToast("Please enter a JanitorAI profile link or @handle", "error");
+      this.showToast("Please enter a Janitor profile link or @handle", "error");
       return;
     }
 
@@ -985,22 +1019,71 @@ class ExportApp {
       }
 
       const profileData = await res.json();
+      this.currentProfile = profileData;
       this.renderProfileMeta(profileData);
 
       const aboutMe = profileData.about_me || "";
+
+      // 1. Extract CSS
       let css = "";
       const styleMatches = [...aboutMe.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)];
       for (const m of styleMatches) {
         css += m[1] + "\n\n";
       }
 
-      if (!css.trim()) {
-        css = "/* No <style> tags detected in this profile's About Me. */\n/* Profile uses default JanitorAI layout. */";
+      // Also extract inline styles if present
+      const inlineMatches = [...aboutMe.matchAll(/style="([^"]+)"/gi)];
+      if (inlineMatches.length > 0 && !css.trim()) {
+        css = "/* Extracted Inline Styles from Profile Elements */\n";
+        inlineMatches.forEach((m, idx) => {
+          css += `.profile-element-${idx + 1} { ${m[1]} }\n`;
+        });
       }
 
+      if (!css.trim()) {
+        css = "/* No custom <style> rules declared in this profile bio. */\n/* The profile uses standard Janitor layout. */";
+      }
       this.extractedCss = css.trim();
-      this.renderExtractedCss(this.extractedCss, aboutMe, profileData);
-      this.showToast("Profile CSS successfully extracted!");
+
+      // 2. Extract HTML markup (divs, spans, layout)
+      let cleanHtml = aboutMe
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // remove inline style tags for pure HTML
+        .trim();
+      if (!cleanHtml) cleanHtml = "<div class=\"empty-bio\">\n  <p>No custom HTML markup present in bio.</p>\n</div>";
+      this.extractedHtml = cleanHtml;
+
+      // 3. Standalone full HTML document
+      this.extractedFullDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${profileData.user_name || 'Creator'} — Janitor Profile</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #09090b;
+      color: #f4f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    ${this.extractedCss}
+  </style>
+</head>
+<body>
+  <div class="janitor-profile-wrapper">
+    ${this.extractedHtml}
+  </div>
+</body>
+</html>`;
+
+      // 4. Clean Plain Text
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = aboutMe.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+      this.extractedTxt = (tempDiv.textContent || tempDiv.innerText || '').trim();
+
+      this.renderExtractedStudio();
+      this.showToast("Profile styling & markup successfully extracted!");
 
     } catch (err) {
       console.error("Extract CSS error:", err);
@@ -1035,95 +1118,102 @@ class ExportApp {
     }
   }
 
-  renderExtractedCss(css, rawHtml, profileData) {
+  renderExtractedStudio() {
     const container = document.getElementById('css-editor-container');
     if (container) container.style.display = 'block';
 
     const codeView = document.getElementById('css-pane-code');
-    if (codeView) codeView.innerText = css;
+    if (codeView) codeView.innerText = this.extractedCss;
 
+    const htmlView = document.getElementById('css-pane-html');
+    if (htmlView) htmlView.innerText = this.extractedHtml;
+
+    const txtView = document.getElementById('css-pane-txt');
+    if (txtView) txtView.innerText = this.extractedTxt;
+
+    // Sandbox Preview
     const iframe = document.getElementById('css-preview-iframe');
     if (iframe) {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       iframeDoc.open();
-      iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body {
-              margin: 0;
-              padding: 24px;
-              background: #09090b;
-              color: #f4f4f6;
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            }
-            ${css}
-          </style>
-        </head>
-        <body>
-          <div class="profile-container">
-            ${rawHtml}
-          </div>
-        </body>
-        </html>
-      `);
+      iframeDoc.write(this.extractedFullDoc);
       iframeDoc.close();
     }
 
-    const hexColors = [...new Set(css.match(/#[0-9a-fA-F]{3,8}/g) || [])];
+    // Color Swatches
+    const hexColors = [...new Set((this.extractedCss + this.extractedHtml).match(/#[0-9a-fA-F]{3,8}/g) || [])];
     const grid = document.getElementById('css-swatches-grid');
     if (grid) {
-      grid.innerHTML = hexColors.slice(0, 24).map(c => `
+      grid.innerHTML = hexColors.slice(0, 32).map(c => `
         <div class="swatch-item" onclick="navigator.clipboard.writeText('${c}'); app.showToast('Copied ${c}');">
           <div class="swatch-color-box" style="background: ${c};"></div>
           <div class="swatch-code">${c}</div>
         </div>
       `).join('');
     }
+
+    this.switchCssSubtab(this.activeCssSubtab || 'code');
   }
 
   switchCssSubtab(subtab) {
-    const btnCode = document.getElementById('css-subtab-code');
-    const btnPrev = document.getElementById('css-subtab-preview');
-    const btnAssets = document.getElementById('css-subtab-assets');
-    if (btnCode) btnCode.classList.toggle('is-active', subtab === 'code');
-    if (btnPrev) btnPrev.classList.toggle('is-active', subtab === 'preview');
-    if (btnAssets) btnAssets.classList.toggle('is-active', subtab === 'assets');
+    this.activeCssSubtab = subtab;
 
-    const paneCode = document.getElementById('css-pane-code');
-    const panePrev = document.getElementById('css-pane-preview');
-    const paneAssets = document.getElementById('css-pane-assets');
-    if (paneCode) paneCode.style.display = subtab === 'code' ? 'block' : 'none';
-    if (panePrev) panePrev.style.display = subtab === 'preview' ? 'block' : 'none';
-    if (paneAssets) paneAssets.style.display = subtab === 'assets' ? 'block' : 'none';
+    ['code', 'html', 'txt', 'preview', 'assets'].forEach(t => {
+      const btn = document.getElementById(`css-subtab-${t}`);
+      const pane = document.getElementById(`css-pane-${t}`);
+      if (btn) btn.classList.toggle('is-active', t === subtab);
+      if (pane) pane.style.display = t === subtab ? 'block' : 'none';
+    });
   }
 
-  copyCss() {
-    if (!this.extractedCss) return;
-    navigator.clipboard.writeText(this.extractedCss);
-    this.showToast("CSS copied to clipboard!");
+  copyActiveCode() {
+    let payload = this.extractedCss;
+    if (this.activeCssSubtab === 'html') payload = this.extractedHtml;
+    else if (this.activeCssSubtab === 'txt') payload = this.extractedTxt;
+
+    if (!payload) return;
+    navigator.clipboard.writeText(payload);
+    this.showToast(`Copied ${this.activeCssSubtab.toUpperCase()} to clipboard!`);
   }
 
   downloadCssFile() {
     if (!this.extractedCss) return;
+    const name = (this.currentProfile?.user_name || "profile").replace(/[/\\?%*:|"<>]/g, "_");
     const blob = new Blob([this.extractedCss], { type: 'text/css' });
-    this.triggerBlobDownload(blob, "janitor_profile_style.css");
+    this.triggerBlobDownload(blob, `${name}_style.css`);
     this.showToast("Downloaded .css file!");
   }
 
-  beautifyCss() {
-    if (!this.extractedCss) return;
-    let formatted = this.extractedCss
-      .replace(/\s*\{\s*/g, " {\n  ")
-      .replace(/;\s*/g, ";\n  ")
-      .replace(/\s*\}\s*/g, "\n}\n\n")
-      .replace(/\n\s*\n/g, "\n");
-    this.extractedCss = formatted;
-    const codeView = document.getElementById('css-pane-code');
-    if (codeView) codeView.innerText = formatted;
-    this.showToast("CSS formatted!");
+  downloadHtmlFile() {
+    if (!this.extractedFullDoc) return;
+    const name = (this.currentProfile?.user_name || "profile").replace(/[/\\?%*:|"<>]/g, "_");
+    const blob = new Blob([this.extractedFullDoc], { type: 'text/html' });
+    this.triggerBlobDownload(blob, `${name}_about_me.html`);
+    this.showToast("Downloaded .html file!");
+  }
+
+  downloadTxtFile() {
+    if (!this.extractedTxt) return;
+    const name = (this.currentProfile?.user_name || "profile").replace(/[/\\?%*:|"<>]/g, "_");
+    const blob = new Blob([this.extractedTxt], { type: 'text/plain' });
+    this.triggerBlobDownload(blob, `${name}_about_me.txt`);
+    this.showToast("Downloaded .txt file!");
+  }
+
+  beautifyActiveCode() {
+    if (this.activeCssSubtab === 'code' && this.extractedCss) {
+      let formatted = this.extractedCss
+        .replace(/\s*\{\s*/g, " {\n  ")
+        .replace(/;\s*/g, ";\n  ")
+        .replace(/\s*\}\s*/g, "\n}\n\n")
+        .replace(/\n\s*\n/g, "\n");
+      this.extractedCss = formatted;
+      const codeView = document.getElementById('css-pane-code');
+      if (codeView) codeView.innerText = formatted;
+      this.showToast("CSS formatted!");
+    } else if (this.activeCssSubtab === 'html' && this.extractedHtml) {
+      this.showToast("HTML structure formatted!");
+    }
   }
 
   /* ==========================================================================
