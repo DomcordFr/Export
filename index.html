@@ -1784,7 +1784,7 @@
         const host = window.location.hostname;
         if (host === "127.0.0.1" || host === "localhost") {
           document.getElementById("setting-gateway-mode").value = "local";
-        } else if (host.includes("export.domcord.org")) {
+        } else if (host.includes("domcord.org")) {
           document.getElementById("setting-gateway-mode").value = "cloud";
         } else {
           document.getElementById("setting-gateway-mode").value = "auto";
@@ -1809,7 +1809,7 @@
         if (mode === "local") {
           return `/hampter/${cleanEndpoint}`;
         } else if (mode === "cloud") {
-          return `https://export.domcord.org/hampter/${cleanEndpoint}`;
+          return `${window.location.origin}/hampter/${cleanEndpoint}`;
         } else if (mode === "custom") {
           const custom = document.getElementById("setting-custom-proxy-url").value.trim().replace(/\/$/, "");
           return `${custom}/https://janitorai.com/hampter/${cleanEndpoint}`;
@@ -1819,7 +1819,7 @@
           if (window.location.protocol.startsWith("http")) {
             return `/hampter/${cleanEndpoint}`;
           }
-          return `https://export.domcord.org/hampter/${cleanEndpoint}`;
+          return `${window.location.origin}/hampter/${cleanEndpoint}`;
         }
       }
 
