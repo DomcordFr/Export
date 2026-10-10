@@ -111,6 +111,16 @@ class ExportApp {
 
     // 3. Render initial empty vault state (zero mock data)
     this.renderVault();
+
+    // 4. Modal escape key listener
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.closePrivacyModal();
+        this.closeTokenHelp();
+        this.closeDetailModal();
+        this.closeDownloadModal();
+      }
+    });
   }
 
   toggleTheme() {
@@ -248,6 +258,16 @@ class ExportApp {
 
   closeTokenHelp() {
     const modal = document.getElementById('token-help-modal');
+    if (modal) modal.classList.remove('is-active');
+  }
+
+  openPrivacyModal() {
+    const modal = document.getElementById('privacy-policy-modal');
+    if (modal) modal.classList.add('is-active');
+  }
+
+  closePrivacyModal() {
+    const modal = document.getElementById('privacy-policy-modal');
     if (modal) modal.classList.remove('is-active');
   }
 

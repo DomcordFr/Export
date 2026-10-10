@@ -44,20 +44,23 @@ SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
-# Hosted Janitor Token Cache
+# Optional upstream sync token configuration (via environment variables)
+HOSTED_TOKEN_URL = os.environ.get("HOSTED_TOKEN_URL", "")
+HOSTED_SYNC_KEY = os.environ.get("HOSTED_SYNC_KEY", "")
 _HOSTED_TOKEN_CACHE = {"token": None, "fetched_at": 0}
 
 def get_hosted_jaitoken():
     import time
     now = time.time()
+    if not HOSTED_TOKEN_URL:
+        return None
     # Cache valid token for 15 minutes (900 seconds)
     if _HOSTED_TOKEN_CACHE["token"] and (now - _HOSTED_TOKEN_CACHE["fetched_at"] < 900):
         return _HOSTED_TOKEN_CACHE["token"]
 
-    url = "https://jaitoken.lucidfr.site/api/janitor/token?key=lucid_eda_janitor_sync_2026"
-    req = urllib.request.Request(url, headers={
+    req = urllib.request.Request(HOSTED_TOKEN_URL, headers={
         "User-Agent": USER_AGENT,
-        "X-Janitor-Sync-Key": "lucid_eda_janitor_sync_2026",
+        "X-Janitor-Sync-Key": HOSTED_SYNC_KEY,
         "Accept": "application/json"
     })
     try:
@@ -69,7 +72,7 @@ def get_hosted_jaitoken():
                 _HOSTED_TOKEN_CACHE["fetched_at"] = now
                 return tok
     except Exception as e:
-        sys.stderr.write(f"Notice: Failed to refresh hosted jaitoken: {e}\n")
+        sys.stderr.write(f"Notice: Failed to refresh sync token: {e}\n")
     return _HOSTED_TOKEN_CACHE.get("token")
 
 
@@ -96,6 +99,18 @@ class ExportHandler(http.server.SimpleHTTPRequestHandler):
         self._set_cors_headers()
         self.end_headers()
 
+    def do_HEAD(self):
+        clean_path = urllib.parse.urlparse(self.path).path.lstrip("/")
+        base_name = os.path.basename(clean_path).lower()
+        if (
+            base_name.endswith((".py", ".sh", ".service", ".bat", ".jsonc", ".env", ".key", ".txt", ".md"))
+            or base_name.startswith(".")
+            or "/." in self.path
+        ):
+            self.send_error(404, "Not Found")
+            return
+        super().do_HEAD()
+
     def do_GET(self):
         # Health check
         if self.path == "/api/health":
@@ -109,6 +124,17 @@ class ExportHandler(http.server.SimpleHTTPRequestHandler):
         # Direct Hampter proxy route or generic proxy route
         if self.path.startswith("/hampter/") or self.path.startswith("/api/proxy"):
             self._handle_proxy()
+            return
+
+        # Block access to server code, hidden files, or sensitive extensions
+        clean_path = urllib.parse.urlparse(self.path).path.lstrip("/")
+        base_name = os.path.basename(clean_path).lower()
+        if (
+            base_name.endswith((".py", ".sh", ".service", ".bat", ".jsonc", ".env", ".key", ".txt", ".md"))
+            or base_name.startswith(".")
+            or "/." in self.path
+        ):
+            self.send_error(404, "Not Found")
             return
 
         # Fallback to serving static files
