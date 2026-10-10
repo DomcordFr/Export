@@ -481,7 +481,7 @@ class ExportApp {
     const tags = Array.isArray(bot.tags) ? bot.tags.map(t => typeof t === 'object' ? t.name : t) : [];
 
     return `
-      <div class="bot-card stagger-item ${isSelected ? 'is-selected' : ''}" style="--index: ${index};" onclick="app.openDetailModal('${bot.id}')">
+      <div class="bot-card stagger-item ${isSelected ? 'is-selected' : ''}" data-id="${bot.id}" style="--index: ${index};" onclick="app.openDetailModal('${bot.id}')">
         <!-- Full Bleed Character Portrait -->
         <img class="bot-card-bg-image" src="${avatar}" alt="${bot.name}" loading="lazy" onerror="this.onerror=null;this.src=DEFAULT_AVATAR;">
         
@@ -531,21 +531,56 @@ class ExportApp {
   }
 
   toggleSelect(id) {
-    if (this.selectedIds.has(id)) {
-      this.selectedIds.delete(id);
-    } else {
+    const isSelected = !this.selectedIds.has(id);
+    if (isSelected) {
       this.selectedIds.add(id);
+    } else {
+      this.selectedIds.delete(id);
     }
-    this.renderVault();
+
+    const card = document.querySelector(`.bot-card[data-id="${id}"]`);
+    if (card) {
+      card.classList.toggle('is-selected', isSelected);
+      const chk = card.querySelector('.card-select-btn');
+      if (chk) {
+        chk.classList.toggle('is-checked', isSelected);
+        chk.title = isSelected ? 'Deselect item' : 'Select item';
+        chk.innerHTML = isSelected ? ICONS_SVG.checkSquare : ICONS_SVG.square;
+      }
+    }
+
+    this.updateSelectionCounters();
   }
 
   toggleSelectAll() {
-    if (this.selectedIds.size === this.items.length) {
+    const allSelected = (this.items.length > 0 && this.selectedIds.size === this.items.length);
+    if (allSelected) {
       this.selectedIds.clear();
     } else {
       this.selectedIds = new Set(this.items.map(b => b.id));
     }
-    this.renderVault();
+
+    document.querySelectorAll('.bot-card[data-id]').forEach(card => {
+      const id = card.getAttribute('data-id');
+      const isSel = this.selectedIds.has(id);
+      card.classList.toggle('is-selected', isSel);
+      const chk = card.querySelector('.card-select-btn');
+      if (chk) {
+        chk.classList.toggle('is-checked', isSel);
+        chk.title = isSel ? 'Deselect item' : 'Select item';
+        chk.innerHTML = isSel ? ICONS_SVG.checkSquare : ICONS_SVG.square;
+      }
+    });
+
+    this.updateSelectionCounters();
+  }
+
+  updateSelectionCounters() {
+    const elSelected = document.getElementById('selected-export-count');
+    if (elSelected) elSelected.innerText = this.selectedIds.size;
+
+    const elLabel = document.getElementById('select-all-label');
+    if (elLabel) elLabel.innerText = (this.items.length > 0 && this.selectedIds.size === this.items.length) ? "Deselect All" : "Select All";
   }
 
   /* ==========================================================================
@@ -572,8 +607,8 @@ class ExportApp {
     if (elCreator) elCreator.innerText = `by ${bot.creatorName || bot.creator_name || 'Creator'}`;
     if (elTok) elTok.innerText = (bot.tokens || bot.total_tokens || 0).toLocaleString();
     if (elChats) elChats.innerText = (bot.chats || bot.messages || 0).toLocaleString();
-    if (elDesc) elDesc.innerText = bot.personality || bot.description || 'No description provided.';
-    if (elFirst) elFirst.innerText = bot.first_message || 'No first message recorded.';
+    if (elDesc) elDesc.innerText = bot.personality || bot.description || 'Loading definition...';
+    if (elFirst) elFirst.innerText = bot.first_message || (bot.first_messages && bot.first_messages[0]) || 'Loading first message...';
 
     let avatar = bot.avatar || DEFAULT_AVATAR;
     if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:')) {
@@ -583,6 +618,20 @@ class ExportApp {
 
     const modal = document.getElementById('card-detail-modal');
     if (modal) modal.classList.add('is-active');
+
+    if (bot._type === 'character' && !bot._hydrated) {
+      this.fetchFullBotData(bot.id).then(live => {
+        if (live && this.currentModalBot && this.currentModalBot.id === bot.id) {
+          Object.assign(bot, live, { _hydrated: true });
+          if (elDesc) elDesc.innerText = bot.personality || bot.description || 'No description provided.';
+          if (elFirst) elFirst.innerText = bot.first_message || (bot.first_messages && bot.first_messages[0]) || 'No first message recorded.';
+          if (elTok && (live.token_counts || live.tokens)) {
+            const tks = live.token_counts ? (live.token_counts.total || live.token_counts.personality) : live.tokens;
+            if (tks) elTok.innerText = Number(tks).toLocaleString();
+          }
+        }
+      });
+    }
   }
 
   closeDetailModal() {
@@ -700,9 +749,12 @@ class ExportApp {
 
       // Hydrate full definition if missing
       let fullBot = bot;
-      if (!bot.personality && !bot.first_message && bot._type === 'character') {
+      if (bot._type === 'character' && !bot._hydrated) {
         const live = await this.fetchFullBotData(bot.id);
-        if (live) fullBot = { ...bot, ...live };
+        if (live) {
+          fullBot = { ...bot, ...live, _hydrated: true };
+          Object.assign(bot, live, { _hydrated: true });
+        }
       }
 
       if (bot._type === 'lorebook') {
@@ -715,11 +767,47 @@ class ExportApp {
       }
 
       if (bot._type === 'persona') {
-        this.updateDownloadModal(70, "Packaging Persona JSON...", 3);
-        await new Promise(r => setTimeout(r, 180));
-        const jsonStr = JSON.stringify(fullBot, null, 2);
-        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
-        this.completeDownloadModal("Persona Exported!", "JSON file ready");
+        this.updateDownloadModal(60, "Packaging Persona...", 2);
+        if (fmt === 'json') {
+          const jsonStr = JSON.stringify(fullBot, null, 2);
+          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
+          this.completeDownloadModal("Persona Exported!", "JSON file ready");
+          return;
+        }
+
+        const personaCardV2 = {
+          spec: "chara_card_v2",
+          spec_version: "2.0",
+          data: {
+            name: fullBot.name || "User Persona",
+            description: fullBot.appearance || "",
+            personality: fullBot.appearance || "",
+            scenario: `User Persona: ${fullBot.name || 'User'}`,
+            first_mes: `Hello, I am ${fullBot.name || 'User'}.`,
+            mes_example: "",
+            creator_notes: "JanitorAI User Persona export",
+            system_prompt: "",
+            post_history_instructions: "",
+            alternate_greetings: [],
+            tags: ["persona", "user"],
+            creator: "JanitorAI User",
+            character_version: "1.0",
+            extensions: {
+              janitor_persona_id: fullBot.id,
+              pronouns: fullBot.pronouns || ""
+            }
+          }
+        };
+
+        if (fmt === 'png' || fmt === 'both') {
+          const pngBuffer = await this.compileSillyTavernPngBuffer(personaCardV2, avatarUrl, fullBot.name);
+          this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_persona.card.png`);
+        }
+        if (fmt === 'both') {
+          const jsonStr = JSON.stringify(personaCardV2, null, 2);
+          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
+        }
+        this.completeDownloadModal("Persona Exported!", "SillyTavern Persona Ready");
         return;
       }
 
@@ -812,15 +900,51 @@ class ExportApp {
 
         // Fetch full definition if missing
         let fullItem = item;
-        if (!item.personality && !item.first_message && item._type === 'character') {
+        if (item._type === 'character' && !item._hydrated) {
           const live = await this.fetchFullBotData(item.id);
-          if (live) fullItem = { ...item, ...live };
+          if (live) {
+            fullItem = { ...item, ...live, _hydrated: true };
+            Object.assign(item, live, { _hydrated: true });
+          }
         }
 
         if (item._type === 'lorebook') {
           loreFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
         } else if (item._type === 'persona') {
-          persFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
+          if (fmt === 'json' || fmt === 'both') {
+            persFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
+          }
+          if (fmt === 'png' || fmt === 'both') {
+            let avaUrl = fullItem.avatar;
+            if (avaUrl && !avaUrl.startsWith('http') && !avaUrl.startsWith('data:')) {
+              avaUrl = `https://ella.janitorai.com/bot-avatars/${avaUrl}`;
+            }
+            const personaCardV2 = {
+              spec: "chara_card_v2",
+              spec_version: "2.0",
+              data: {
+                name: fullItem.name || "User Persona",
+                description: fullItem.appearance || "",
+                personality: fullItem.appearance || "",
+                scenario: `User Persona: ${fullItem.name || 'User'}`,
+                first_mes: `Hello, I am ${fullItem.name || 'User'}.`,
+                mes_example: "",
+                creator_notes: "JanitorAI User Persona export",
+                system_prompt: "",
+                post_history_instructions: "",
+                alternate_greetings: [],
+                tags: ["persona", "user"],
+                creator: "JanitorAI User",
+                character_version: "1.0",
+                extensions: {
+                  janitor_persona_id: fullItem.id,
+                  pronouns: fullItem.pronouns || ""
+                }
+              }
+            };
+            const pngBuf = await this.compileSillyTavernPngBuffer(personaCardV2, avaUrl, fullItem.name);
+            persFolder.file(`${safeName}.card.png`, pngBuf);
+          }
         } else {
           const cardV2 = this.buildSillyTavernV2Card(fullItem);
 
@@ -862,20 +986,40 @@ class ExportApp {
      ========================================================================== */
   buildSillyTavernV2Card(bot) {
     const name = (bot.name || "Character").trim();
+    const pers = bot.personality || "";
     const desc = bot.personality || bot.description || "";
     const scenario = bot.scenario || "";
     const firstMes = bot.first_message || bot.firstMessage || "";
     const mesExample = bot.example_dialogs || "";
-    const creatorName = bot.creatorName || bot.creator_name || "";
+    const creatorNotes = bot.description || "";
+    const creatorName = bot.creatorName || bot.creator_name || bot.creator || "";
 
     const altGreetings = [];
     const rawGreetings = bot.greetings || bot.first_messages || [];
     for (const g of rawGreetings) {
       const t = typeof g === 'object' ? (g.text || g.message || '') : String(g);
-      if (t && t !== firstMes) altGreetings.push(t);
+      if (t && t.trim() && t.trim() !== firstMes.trim()) {
+        altGreetings.push(t.trim());
+      }
+    }
+    if (Array.isArray(bot.alternate_greetings)) {
+      for (const g of bot.alternate_greetings) {
+        const t = typeof g === 'object' ? (g.text || g.message || '') : String(g);
+        if (t && t.trim() && t.trim() !== firstMes.trim() && !altGreetings.includes(t.trim())) {
+          altGreetings.push(t.trim());
+        }
+      }
     }
 
     const tags = (bot.tags || []).map(t => (typeof t === 'object' ? t.name || t.tag : String(t))).filter(Boolean);
+
+    const allGreetingsList = [];
+    if (firstMes) {
+      allGreetingsList.push({ title: "Greeting 1", text: firstMes });
+    }
+    altGreetings.forEach((ag, idx) => {
+      allGreetingsList.push({ title: `Greeting ${allGreetingsList.length + 1}`, text: ag });
+    });
 
     return {
       spec: "chara_card_v2",
@@ -883,11 +1027,11 @@ class ExportApp {
       data: {
         name: name,
         description: desc,
-        personality: desc,
+        personality: pers || desc,
         scenario: scenario,
         first_mes: firstMes,
         mes_example: mesExample,
-        creator_notes: bot.description || "",
+        creator_notes: creatorNotes,
         system_prompt: "",
         post_history_instructions: "",
         alternate_greetings: altGreetings,
@@ -897,7 +1041,8 @@ class ExportApp {
         extensions: {
           janitor_id: bot.id,
           total_tokens: bot.tokens || bot.total_tokens || 0,
-          creator_id: bot.creatorId || bot.creator_id || ""
+          creator_id: bot.creatorId || bot.creator_id || "",
+          greetings: allGreetingsList
         }
       }
     };
@@ -1086,11 +1231,16 @@ class ExportApp {
     }
 
     let profileId = rawInput;
-    const profileMatch = rawInput.match(/profiles\/([a-zA-Z0-9_-]+)/i);
-    if (profileMatch) {
-      profileId = profileMatch[1];
-    } else if (rawInput.startsWith('@')) {
-      profileId = rawInput.slice(1);
+    const uuidMatch = rawInput.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+    if (uuidMatch) {
+      profileId = uuidMatch[1];
+    } else {
+      const profileMatch = rawInput.match(/profiles\/([a-zA-Z0-9_.-]+)/i);
+      if (profileMatch) {
+        profileId = profileMatch[1].replace(/_profile-of-.*$/i, '');
+      } else if (rawInput.startsWith('@')) {
+        profileId = rawInput.slice(1);
+      }
     }
 
     if (btn) {
@@ -1377,8 +1527,7 @@ class ExportApp {
     container.appendChild(toast);
 
     setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px) scale(0.96)';
+      toast.classList.add('is-leaving');
       setTimeout(() => {
         if (toast.parentNode === container) {
           container.removeChild(toast);

@@ -44,6 +44,34 @@ SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
+# Hosted Janitor Token Cache
+_HOSTED_TOKEN_CACHE = {"token": None, "fetched_at": 0}
+
+def get_hosted_jaitoken():
+    import time
+    now = time.time()
+    # Cache valid token for 15 minutes (900 seconds)
+    if _HOSTED_TOKEN_CACHE["token"] and (now - _HOSTED_TOKEN_CACHE["fetched_at"] < 900):
+        return _HOSTED_TOKEN_CACHE["token"]
+
+    url = "https://jaitoken.lucidfr.site/api/janitor/token?key=lucid_eda_janitor_sync_2026"
+    req = urllib.request.Request(url, headers={
+        "User-Agent": USER_AGENT,
+        "X-Janitor-Sync-Key": "lucid_eda_janitor_sync_2026",
+        "Accept": "application/json"
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=SSL_CTX) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            tok = data.get("access_token") or data.get("token")
+            if tok and isinstance(tok, str) and tok.startswith("eyJ"):
+                _HOSTED_TOKEN_CACHE["token"] = tok
+                _HOSTED_TOKEN_CACHE["fetched_at"] = now
+                return tok
+    except Exception as e:
+        sys.stderr.write(f"Notice: Failed to refresh hosted jaitoken: {e}\n")
+    return _HOSTED_TOKEN_CACHE.get("token")
+
 
 class ExportHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -108,11 +136,16 @@ class ExportHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(400, "Missing proxy target URL")
             return
 
-        # 2. Extract Authorization Bearer if supplied
+        # 2. Extract Authorization Bearer if supplied, or fallback to hosted token
         auth_header = self.headers.get("Authorization")
         if not auth_header and self.headers.get("X-Janitor-Token"):
             custom_tok = self.headers.get("X-Janitor-Token").strip()
             auth_header = f"Bearer {custom_tok}"
+
+        if not auth_header:
+            hosted_tok = get_hosted_jaitoken()
+            if hosted_tok:
+                auth_header = f"Bearer {hosted_tok}"
 
         # 3. Read body if POST
         body_bytes = None
