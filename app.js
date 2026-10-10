@@ -21,14 +21,57 @@ function calculateCrc32(bytes) {
   return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-// 2. Icon SVGs
+// 2. Dominion Media SVGs (High-Fidelity Fallbacks)
+const DOMINION_MEDIA_SVGS = {
+  zip: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="10" fill="#1E1B4B"/>
+    <path d="M14 10C14 8.89543 14.8954 8 16 8H26L34 16V38C34 39.1046 33.1046 40 32 40H16C14.8954 40 14 39.1046 14 38V10Z" fill="#312E81" stroke="#818CF8" stroke-width="1.8"/>
+    <path d="M26 8V16H34" fill="#4338CA" stroke="#818CF8" stroke-width="1.8" stroke-linejoin="round"/>
+    <rect x="22" y="14" width="4" height="2.5" rx="0.5" fill="#C7D2FE"/>
+    <rect x="24" y="17.5" width="4" height="2.5" rx="0.5" fill="#C7D2FE"/>
+    <rect x="22" y="21" width="4" height="2.5" rx="0.5" fill="#C7D2FE"/>
+    <rect x="24" y="24.5" width="4" height="2.5" rx="0.5" fill="#C7D2FE"/>
+    <rect x="21" y="28" width="6" height="8" rx="2" fill="#818CF8" stroke="#EEF2FF" stroke-width="1"/>
+    <circle cx="24" cy="33" r="1.5" fill="#1E1B4B"/>
+  </svg>`,
+
+  json: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="10" fill="#18181B"/>
+    <path d="M14 10C14 8.89543 14.8954 8 16 8H26L34 16V38C34 39.1046 33.1046 40 32 40H16C14.8954 40 14 39.1046 14 38V10Z" fill="#27272A" stroke="#F59E0B" stroke-width="1.8"/>
+    <path d="M26 8V16H34" fill="#3F3F46" stroke="#F59E0B" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M20 23C18.5 24 18.5 25 18.5 26C18.5 27 17.5 28 16.5 28C17.5 28 18.5 29 18.5 30C18.5 31 20 32 20 33" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"/>
+    <path d="M28 23C29.5 24 29.5 25 29.5 26C29.5 27 30.5 28 31.5 28C30.5 28 29.5 29 29.5 30C29.5 31 28 32 28 33" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  persona: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="10" fill="#2E1065"/>
+    <circle cx="24" cy="18" r="7" fill="#C084FC" stroke="#F3E8FF" stroke-width="1.5"/>
+    <path d="M12 38C12 31.3726 17.3726 26 24 26C30.6274 26 36 31.3726 36 38" fill="#7E22CE" stroke="#F3E8FF" stroke-width="1.5"/>
+    <circle cx="34" cy="34" r="5" fill="#A855F7" stroke="#FAF5FF" stroke-width="1.5"/>
+    <path d="M34 32V36M32 34H36" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+
+  bot: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="10" fill="#111827"/>
+    <rect x="13" y="14" width="22" height="20" rx="4" fill="#1F2937" stroke="#60A5FA" stroke-width="1.8"/>
+    <circle cx="19" cy="22" r="2.5" fill="#60A5FA"/>
+    <circle cx="29" cy="22" r="2.5" fill="#60A5FA"/>
+    <path d="M19 28H29" stroke="#93C5FD" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="9" x2="24" y2="14" stroke="#60A5FA" stroke-width="2"/>
+    <circle cx="24" cy="8" r="2" fill="#60A5FA"/>
+  </svg>`
+};
+
+// 3. Icon SVGs
 const ICONS_SVG = {
   chat: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   token: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5H9.5a2.5 2.5 0 0 0 0 5H15"/></svg>',
   download: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',
   checkSquare: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   square: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
-  verified: '<svg class="ui-icon-xs" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+verified: '<svg class="ui-icon-xs" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  user: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  book: '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
 };
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231d1d25'/%3E%3Ctext x='50' y='55' font-size='24' fill='%2371717e' text-anchor='middle' font-family='sans-serif'%3E%3F%3C/text%3E%3C/svg%3E";
@@ -42,6 +85,7 @@ class ExportApp {
     this.currentFilter = 'all';
     this.exportFormat = 'png'; // 'png', 'json', or 'both'
     this.currentModalBot = null;
+    this.isDownloadMinimized = false;
 
     // CSS Studio Data
     this.currentProfile = null;
@@ -223,6 +267,19 @@ class ExportApp {
       h['Authorization'] = `Bearer ${this.token}`;
     }
     return h;
+  }
+
+resolveAvatarUrl(itemOrAvatar, type = 'bot') {
+    let avatar = (typeof itemOrAvatar === 'object' && itemOrAvatar) ? itemOrAvatar.avatar : itemOrAvatar;
+    const itemType = (typeof itemOrAvatar === 'object' && itemOrAvatar && itemOrAvatar._type) ? itemOrAvatar._type : type;
+
+    if (!avatar) return null;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) {
+      return avatar;
+    }
+    const isUserOrPersona = itemType === 'persona' || itemType === 'user' || itemType === 'profile';
+    const folder = isUserOrPersona ? 'avatars' : 'bot-avatars';
+    return `https://ella.janitorai.com/${folder}/${avatar}`;
   }
 
   parseJwt(tok) {
@@ -463,26 +520,28 @@ class ExportApp {
 
   renderBotCardHTML(bot, index = 0) {
     const isSelected = this.selectedIds.has(bot.id);
+    const isPersona = bot._type === 'persona';
+    const isLorebook = bot._type === 'lorebook';
+
     const chats = bot.chats || bot.messages || 0;
     const chatDisplay = chats >= 1000000 ? (chats / 1000000).toFixed(1) + 'M' : chats >= 1000 ? (chats / 1000).toFixed(1) + 'k' : chats;
-    const tokensDisplay = ((bot.tokens || bot.total_tokens || 0)).toLocaleString();
-
-    let avatar = bot.avatar || DEFAULT_AVATAR;
-    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:')) {
-      avatar = `https://ella.janitorai.com/bot-avatars/${avatar}`;
+    
+    let tokensDisplay = ((bot.tokens || bot.total_tokens || 0)).toLocaleString() + ' t';
+    if (isPersona) {
+      const words = (bot.appearance || '').trim().split(/\s+/).filter(Boolean).length;
+      tokensDisplay = `${words} words`;
     }
 
-    const creator = bot.creatorName || bot.creator_name || 'Creator';
-    let creatorAvatar = bot.creatorAvatar || bot.creator_avatar || DEFAULT_AVATAR;
-    if (creatorAvatar && !creatorAvatar.startsWith('http') && !creatorAvatar.startsWith('data:')) {
-      creatorAvatar = `https://ella.janitorai.com/bot-avatars/${creatorAvatar}`;
-    }
+    let avatar = this.resolveAvatarUrl(bot, isPersona ? 'persona' : 'bot') || DEFAULT_AVATAR;
 
-    const tags = Array.isArray(bot.tags) ? bot.tags.map(t => typeof t === 'object' ? t.name : t) : [];
+    const creator = isPersona ? 'Personal Persona' : (bot.creatorName || bot.creator_name || 'Creator');
+    let creatorAvatar = this.resolveAvatarUrl(bot.creatorAvatar || bot.creator_avatar, 'user') || DEFAULT_AVATAR;
+
+    const tags = Array.isArray(bot.tags) ? bot.tags.map(t => typeof t === 'object' ? t.name : t) : (isPersona ? ['persona', bot.pronouns].filter(Boolean) : []);
 
     return `
       <div class="bot-card stagger-item ${isSelected ? 'is-selected' : ''}" data-id="${bot.id}" style="--index: ${index};" onclick="app.openDetailModal('${bot.id}')">
-        <!-- Full Bleed Character Portrait -->
+        <!-- Full Bleed Portrait -->
         <img class="bot-card-bg-image" src="${avatar}" alt="${bot.name}" loading="lazy" onerror="this.onerror=null;this.src=DEFAULT_AVATAR;">
         
         <!-- Multi-stop Gradient Protection -->
@@ -490,7 +549,7 @@ class ExportApp {
 
         <!-- Top Controls -->
         <div class="bot-card-top-bar">
-          <span class="bot-card-cat-chip">${bot.category || 'BOT'}</span>
+          <span class="bot-card-cat-chip">${bot.category || (isPersona ? 'PERSONA' : isLorebook ? 'LOREBOOK' : 'BOT')}</span>
           <div class="bot-card-actions-group">
             <button class="card-action-btn card-select-btn ${isSelected ? 'is-checked' : ''}" title="${isSelected ? 'Deselect item' : 'Select item'}" onclick="event.stopPropagation(); app.toggleSelect('${bot.id}');">
               ${isSelected ? ICONS_SVG.checkSquare : ICONS_SVG.square}
@@ -505,12 +564,12 @@ class ExportApp {
         <div class="bot-card-content-area">
           <div class="bot-card-stat-pills-row">
             <span class="bot-card-stat-pill">
-              ${ICONS_SVG.chat}
-              <span>${chatDisplay}</span>
+              ${isPersona ? ICONS_SVG.user : ICONS_SVG.chat}
+              <span>${isPersona ? (bot.pronouns || 'Persona') : chatDisplay}</span>
             </span>
             <span class="bot-card-stat-pill">
-              ${ICONS_SVG.token}
-              <span>${tokensDisplay} t</span>
+              ${isPersona ? ICONS_SVG.book : ICONS_SVG.token}
+              <span>${tokensDisplay}</span>
             </span>
           </div>
 
@@ -591,6 +650,9 @@ class ExportApp {
     if (!bot) return;
     this.currentModalBot = bot;
 
+    const isPersona = bot._type === 'persona';
+    const isLore = bot._type === 'lorebook';
+
     const elName = document.getElementById('modal-char-name');
     const elTitle = document.getElementById('modal-char-title');
     const elCat = document.getElementById('modal-char-category');
@@ -601,20 +663,29 @@ class ExportApp {
     const elFirst = document.getElementById('modal-char-firstmes');
     const elImg = document.getElementById('modal-char-avatar');
 
-    if (elName) elName.innerText = bot.name || 'Character Details';
+    if (elName) elName.innerText = bot.name || 'Item Details';
     if (elTitle) elTitle.innerText = bot.name || '';
-    if (elCat) elCat.innerText = bot.category || 'CHARACTER';
-    if (elCreator) elCreator.innerText = `by ${bot.creatorName || bot.creator_name || 'Creator'}`;
-    if (elTok) elTok.innerText = (bot.tokens || bot.total_tokens || 0).toLocaleString();
-    if (elChats) elChats.innerText = (bot.chats || bot.messages || 0).toLocaleString();
-    if (elDesc) elDesc.innerText = bot.personality || bot.description || 'Loading definition...';
-    if (elFirst) elFirst.innerText = bot.first_message || (bot.first_messages && bot.first_messages[0]) || 'Loading first message...';
+    if (elCat) elCat.innerText = bot.category || (isPersona ? 'PERSONA' : isLore ? 'LOREBOOK' : 'CHARACTER');
+    if (elCreator) elCreator.innerText = isPersona ? 'Personal Persona' : `by ${bot.creatorName || bot.creator_name || 'Creator'}`;
 
-    let avatar = bot.avatar || DEFAULT_AVATAR;
-    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:')) {
-      avatar = `https://ella.janitorai.com/bot-avatars/${avatar}`;
+    if (isPersona) {
+      const words = (bot.appearance || '').trim().split(/\s+/).filter(Boolean).length;
+      if (elTok) elTok.innerText = `${words} words`;
+      if (elChats) elChats.innerText = bot.pronouns || 'Persona';
+      if (elDesc) elDesc.innerText = bot.appearance || 'No appearance defined.';
+      if (elFirst) elFirst.innerText = bot.pronouns ? `Pronouns: ${bot.pronouns}\nPersona ID: ${bot.id}` : `Janitor User Persona (${bot.name})`;
+    } else {
+      if (elTok) elTok.innerText = (bot.tokens || bot.total_tokens || 0).toLocaleString();
+      if (elChats) elChats.innerText = (bot.chats || bot.messages || 0).toLocaleString();
+      if (elDesc) elDesc.innerText = bot.personality || bot.description || 'Loading definition...';
+      if (elFirst) elFirst.innerText = bot.first_message || (bot.first_messages && bot.first_messages[0]) || 'Loading first message...';
     }
-    if (elImg) elImg.src = avatar;
+
+    let avatar = this.resolveAvatarUrl(bot, isPersona ? 'persona' : 'bot') || DEFAULT_AVATAR;
+    if (elImg) {
+      elImg.src = avatar;
+      elImg.onerror = () => { elImg.src = DEFAULT_AVATAR; };
+    }
 
     const modal = document.getElementById('card-detail-modal');
     if (modal) modal.classList.add('is-active');
@@ -638,19 +709,47 @@ class ExportApp {
     const modal = document.getElementById('card-detail-modal');
     if (modal) modal.classList.remove('is-active');
     this.currentModalBot = null;
+    this.isDownloadMinimized = false;
   }
 
   /* ==========================================================================
      DOWNLOAD POPUP MODAL CONTROLLER
      ========================================================================== */
-  openDownloadModal(title, thumb, name, sub) {
+  openDownloadModal(title, thumb, name, sub, previewType = null) {
     const modal = document.getElementById('download-progress-modal');
     if (!modal) return;
 
+    this.isDownloadMinimized = false;
+    const pill = document.getElementById('download-minimized-pill');
+    if (pill) pill.style.display = 'none';
+
     document.getElementById('dl-modal-title').innerText = title;
-    document.getElementById('dl-preview-thumb').src = thumb || DEFAULT_AVATAR;
     document.getElementById('dl-preview-name').innerText = name || 'Item';
-    document.getElementById('dl-preview-sub').innerText = sub || 'SillyTavern V2 PNG • Chara Chunk';
+    document.getElementById('dl-preview-sub').innerText = sub || 'Dominion V2 Card';
+
+    const thumbImg = document.getElementById('dl-preview-thumb');
+    const svgBox = document.getElementById('dl-preview-svg');
+
+    if (previewType && DOMINION_MEDIA_SVGS[previewType]) {
+      if (thumbImg) thumbImg.style.display = 'none';
+      if (svgBox) {
+        svgBox.innerHTML = DOMINION_MEDIA_SVGS[previewType];
+        svgBox.style.display = 'flex';
+      }
+    } else {
+      if (svgBox) svgBox.style.display = 'none';
+      if (thumbImg) {
+        thumbImg.style.display = 'block';
+        thumbImg.src = thumb || DEFAULT_AVATAR;
+        thumbImg.onerror = () => {
+          thumbImg.style.display = 'none';
+          if (svgBox) {
+            svgBox.innerHTML = DOMINION_MEDIA_SVGS.bot;
+            svgBox.style.display = 'flex';
+          }
+        };
+      }
+    }
 
     document.getElementById('dl-deck-loader').style.display = 'block';
     document.getElementById('dl-success-icon').style.display = 'none';
@@ -669,6 +768,32 @@ class ExportApp {
     modal.classList.add('is-active');
   }
 
+  minimizeDownloadModal() {
+    this.isDownloadMinimized = true;
+    const modal = document.getElementById('download-progress-modal');
+    if (modal) modal.classList.remove('is-active');
+
+    const pill = document.getElementById('download-minimized-pill');
+    if (pill) {
+      pill.style.display = 'flex';
+      const pillTitle = document.getElementById('minimized-pill-title');
+      const curStatus = document.getElementById('dl-status-text')?.innerText;
+      if (pillTitle && curStatus) pillTitle.innerText = curStatus;
+      const pillPct = document.getElementById('minimized-pill-pct');
+      const curPct = document.getElementById('dl-pct-text')?.innerText;
+      if (pillPct && curPct) pillPct.innerText = curPct;
+    }
+  }
+
+  restoreDownloadModal() {
+    this.isDownloadMinimized = false;
+    const pill = document.getElementById('download-minimized-pill');
+    if (pill) pill.style.display = 'none';
+
+    const modal = document.getElementById('download-progress-modal');
+    if (modal) modal.classList.add('is-active');
+  }
+
   updateDownloadModal(pct, statusText, activeStep) {
     const elFill = document.getElementById('dl-progress-fill');
     const elPct = document.getElementById('dl-pct-text');
@@ -677,6 +802,11 @@ class ExportApp {
     if (elFill) elFill.style.width = `${pct}%`;
     if (elPct) elPct.innerText = `${pct}%`;
     if (elStatus) elStatus.innerText = statusText;
+
+    const pillPct = document.getElementById('minimized-pill-pct');
+    const pillTitle = document.getElementById('minimized-pill-title');
+    if (pillPct) pillPct.innerText = `${pct}%`;
+    if (pillTitle && statusText) pillTitle.innerText = statusText;
 
     for (let i = 1; i <= 4; i++) {
       const stepRow = document.getElementById(`dl-step-${i}`);
@@ -698,15 +828,26 @@ class ExportApp {
     document.getElementById('dl-success-icon').style.display = 'flex';
     document.getElementById('dl-preview-sub').innerText = sub || 'Ready for SillyTavern';
     document.getElementById('dl-modal-footer').style.display = 'flex';
+
+    const pill = document.getElementById('download-minimized-pill');
+    if (pill && this.isDownloadMinimized) {
+      setTimeout(() => {
+        if (pill) pill.style.display = 'none';
+      }, 4000);
+    }
   }
 
   closeDownloadModal() {
+    this.isDownloadMinimized = false;
     const modal = document.getElementById('download-progress-modal');
     if (modal) modal.classList.remove('is-active');
+
+    const pill = document.getElementById('download-minimized-pill');
+    if (pill) pill.style.display = 'none';
   }
 
   /* ==========================================================================
-     FULL BOT HYDRATION
+     FULL BOT HYDRATION     FULL BOT HYDRATION
      ========================================================================== */
   async fetchFullBotData(botId) {
     try {
@@ -729,23 +870,26 @@ class ExportApp {
     if (!bot) return;
 
     const fmt = explicitFormat || this.exportFormat || 'png';
+    const isPersona = bot._type === 'persona';
+    const isLore = bot._type === 'lorebook';
 
-    let avatarUrl = bot.avatar || DEFAULT_AVATAR;
-    if (avatarUrl && !avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
-      avatarUrl = `https://ella.janitorai.com/bot-avatars/${avatarUrl}`;
-    }
-
+    let avatarUrl = this.resolveAvatarUrl(bot, isPersona ? 'persona' : 'bot') || DEFAULT_AVATAR;
     const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+
+    let previewType = null;
+    if (isLore || fmt === 'json') previewType = 'json';
+    else if (isPersona && (!avatarUrl || avatarUrl === DEFAULT_AVATAR)) previewType = 'persona';
 
     this.openDownloadModal(
       `Downloading ${bot.name}`,
       avatarUrl,
       bot.name,
-      fmt === 'json' ? "Character V2 JSON" : fmt === 'both' ? "PNG Card + V2 JSON" : "SillyTavern V2 PNG Card"
+      fmt === 'json' ? "Dominion V2 JSON" : fmt === 'both' ? "Dominion PNG Card + JSON" : "Dominion SillyTavern Card",
+      previewType
     );
 
     try {
-      this.updateDownloadModal(25, "Resolving character metadata & greetings...", 1);
+      this.updateDownloadModal(25, "Resolving metadata & definitions...", 1);
 
       // Hydrate full definition if missing
       let fullBot = bot;
@@ -761,17 +905,17 @@ class ExportApp {
         this.updateDownloadModal(70, "Packaging Lorebook JSON...", 3);
         await new Promise(r => setTimeout(r, 180));
         const jsonStr = JSON.stringify(fullBot, null, 2);
-        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_lorebook.json`);
-        this.completeDownloadModal("Lorebook Exported!", "JSON file ready");
+        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `Dominion_${safeName}_lorebook.json`);
+        this.completeDownloadModal("Lorebook Exported!", "Dominion JSON ready");
         return;
       }
 
       if (bot._type === 'persona') {
-        this.updateDownloadModal(60, "Packaging Persona...", 2);
+        this.updateDownloadModal(60, "Packaging Persona Card...", 2);
         if (fmt === 'json') {
           const jsonStr = JSON.stringify(fullBot, null, 2);
-          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
-          this.completeDownloadModal("Persona Exported!", "JSON file ready");
+          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `Dominion_${safeName}_persona.json`);
+          this.completeDownloadModal("Persona Exported!", "Dominion JSON ready");
           return;
         }
 
@@ -785,13 +929,13 @@ class ExportApp {
             scenario: `User Persona: ${fullBot.name || 'User'}`,
             first_mes: `Hello, I am ${fullBot.name || 'User'}.`,
             mes_example: "",
-            creator_notes: "JanitorAI User Persona export",
+            creator_notes: "Exported via Dominion (JanitorAI Backup Suite)\nPersona V2 Specification",
             system_prompt: "",
             post_history_instructions: "",
             alternate_greetings: [],
-            tags: ["persona", "user"],
+            tags: ["persona", "user", fullBot.pronouns].filter(Boolean),
             creator: "JanitorAI User",
-            character_version: "1.0",
+            character_version: "Dominion V2",
             extensions: {
               janitor_persona_id: fullBot.id,
               pronouns: fullBot.pronouns || ""
@@ -801,13 +945,13 @@ class ExportApp {
 
         if (fmt === 'png' || fmt === 'both') {
           const pngBuffer = await this.compileSillyTavernPngBuffer(personaCardV2, avatarUrl, fullBot.name);
-          this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_persona.card.png`);
+          this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `Dominion_${safeName}_persona.card.png`);
         }
         if (fmt === 'both') {
           const jsonStr = JSON.stringify(personaCardV2, null, 2);
-          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_persona.json`);
+          this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `Dominion_${safeName}_persona.json`);
         }
-        this.completeDownloadModal("Persona Exported!", "SillyTavern Persona Ready");
+        this.completeDownloadModal("Persona Exported!", "Dominion SillyTavern Persona Ready");
         return;
       }
 
@@ -818,8 +962,8 @@ class ExportApp {
         this.updateDownloadModal(75, "Compiling SillyTavern V2 JSON...", 3);
         await new Promise(r => setTimeout(r, 150));
         const jsonStr = JSON.stringify(cardV2, null, 2);
-        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_v2.json`);
-        this.completeDownloadModal("JSON Download Complete!", "SillyTavern V2 Specification JSON");
+        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `Dominion_${safeName}_v2.json`);
+        this.completeDownloadModal("JSON Download Complete!", "Dominion SillyTavern Specification");
         this.showToast(`Downloaded "${bot.name}" JSON!`);
         return;
       }
@@ -831,9 +975,9 @@ class ExportApp {
 
         this.updateDownloadModal(85, "Embedding SillyTavern V2 chara chunk & CRC32...", 3);
         this.updateDownloadModal(100, "Delivering SillyTavern card download...", 4);
-        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
+        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `Dominion_${safeName}_v2.card.png`);
 
-        this.completeDownloadModal("Card Download Complete!", "SillyTavern V2 PNG • Ready to import");
+        this.completeDownloadModal("Card Download Complete!", "Dominion SillyTavern V2 PNG");
         this.showToast(`Downloaded "${bot.name}" character card!`);
         return;
       }
@@ -842,12 +986,12 @@ class ExportApp {
       if (fmt === 'both') {
         this.updateDownloadModal(50, "Generating PNG card & JSON definition...", 2);
         const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, bot.name);
-        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `${safeName}_v2.card.png`);
+        this.triggerBlobDownload(new Blob([pngBuffer], { type: 'image/png' }), `Dominion_${safeName}_v2.card.png`);
 
         const jsonStr = JSON.stringify(cardV2, null, 2);
-        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `${safeName}_v2.json`);
+        this.triggerBlobDownload(new Blob([jsonStr], { type: 'application/json' }), `Dominion_${safeName}_v2.json`);
 
-        this.completeDownloadModal("Export Complete!", "Both SillyTavern PNG Card & V2 JSON downloaded");
+        this.completeDownloadModal("Export Complete!", "Dominion PNG Card & V2 JSON downloaded");
         this.showToast(`Downloaded "${bot.name}" PNG + JSON!`);
         return;
       }
@@ -860,7 +1004,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     BATCH EXPORT SELECTED AS ZIP (SUPPORTS PNG, JSON, BOTH)
+     BATCH EXPORT SELECTED AS ZIP     BATCH EXPORT SELECTED AS ZIP (SUPPORTS PNG, JSON, BOTH)
      ========================================================================== */
   async exportSelectedZip() {
     const selected = this.items.filter(b => this.selectedIds.has(b.id));
@@ -880,9 +1024,10 @@ class ExportApp {
 
     this.openDownloadModal(
       `Compiling Vault Archive (.zip)`,
-      selected[0]?.avatar || DEFAULT_AVATAR,
-      `Vault Archive (${total} Items)`,
-      `${formatLabel} • Compressed ZIP`
+      null,
+      `Dominion Vault Archive (${total} Items)`,
+      `${formatLabel} • Compressed ZIP`,
+      'zip'
     );
 
     try {
@@ -909,16 +1054,13 @@ class ExportApp {
         }
 
         if (item._type === 'lorebook') {
-          loreFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
+          loreFolder.file(`Dominion_${safeName}_lorebook.json`, JSON.stringify(fullItem, null, 2));
         } else if (item._type === 'persona') {
           if (fmt === 'json' || fmt === 'both') {
-            persFolder.file(`${safeName}.json`, JSON.stringify(fullItem, null, 2));
+            persFolder.file(`Dominion_${safeName}_persona.json`, JSON.stringify(fullItem, null, 2));
           }
           if (fmt === 'png' || fmt === 'both') {
-            let avaUrl = fullItem.avatar;
-            if (avaUrl && !avaUrl.startsWith('http') && !avaUrl.startsWith('data:')) {
-              avaUrl = `https://ella.janitorai.com/bot-avatars/${avaUrl}`;
-            }
+            let avaUrl = this.resolveAvatarUrl(fullItem, 'persona');
             const personaCardV2 = {
               spec: "chara_card_v2",
               spec_version: "2.0",
@@ -929,13 +1071,13 @@ class ExportApp {
                 scenario: `User Persona: ${fullItem.name || 'User'}`,
                 first_mes: `Hello, I am ${fullItem.name || 'User'}.`,
                 mes_example: "",
-                creator_notes: "JanitorAI User Persona export",
+                creator_notes: "Exported via Dominion (JanitorAI Backup Suite)\nPersona V2 Specification",
                 system_prompt: "",
                 post_history_instructions: "",
                 alternate_greetings: [],
-                tags: ["persona", "user"],
+                tags: ["persona", "user", fullItem.pronouns].filter(Boolean),
                 creator: "JanitorAI User",
-                character_version: "1.0",
+                character_version: "Dominion V2",
                 extensions: {
                   janitor_persona_id: fullItem.id,
                   pronouns: fullItem.pronouns || ""
@@ -943,22 +1085,19 @@ class ExportApp {
               }
             };
             const pngBuf = await this.compileSillyTavernPngBuffer(personaCardV2, avaUrl, fullItem.name);
-            persFolder.file(`${safeName}.card.png`, pngBuf);
+            persFolder.file(`Dominion_${safeName}_persona.card.png`, pngBuf);
           }
         } else {
           const cardV2 = this.buildSillyTavernV2Card(fullItem);
 
           if (fmt === 'json' || fmt === 'both') {
-            botsFolder.file(`${safeName}_v2.json`, JSON.stringify(cardV2, null, 2));
+            botsFolder.file(`Dominion_${safeName}_v2.json`, JSON.stringify(cardV2, null, 2));
           }
 
           if (fmt === 'png' || fmt === 'both') {
-            let avaUrl = fullItem.avatar;
-            if (avaUrl && !avaUrl.startsWith('http') && !avaUrl.startsWith('data:')) {
-              avaUrl = `https://ella.janitorai.com/bot-avatars/${avaUrl}`;
-            }
+            let avaUrl = this.resolveAvatarUrl(fullItem, 'bot');
             const pngBuf = await this.compileSillyTavernPngBuffer(cardV2, avaUrl, item.name);
-            botsFolder.file(`${safeName}_v2.card.png`, pngBuf);
+            botsFolder.file(`Dominion_${safeName}_v2.card.png`, pngBuf);
           }
         }
 
@@ -969,7 +1108,7 @@ class ExportApp {
       const zipBlob = await zip.generateAsync({ type: "blob" });
 
       const timeStamp = new Date().toISOString().slice(0, 10);
-      this.triggerBlobDownload(zipBlob, `SillyTavern_Vault_${timeStamp}.zip`);
+      this.triggerBlobDownload(zipBlob, `Dominion_Vault_Archive_${timeStamp}.zip`);
 
       this.completeDownloadModal("Vault Export Complete!", `ZIP file with ${total} items (${formatLabel}) downloaded`);
       this.showToast(`Successfully downloaded ZIP with ${total} items!`);
@@ -982,7 +1121,7 @@ class ExportApp {
   }
 
   /* ==========================================================================
-     SILLYTAVERN SPECIFICATION & PNG METADATA INJECTION
+     SILLYTAVERN SPECIFICATION     SILLYTAVERN SPECIFICATION & PNG METADATA INJECTION
      ========================================================================== */
   buildSillyTavernV2Card(bot) {
     const name = (bot.name || "Character").trim();
@@ -1031,13 +1170,13 @@ class ExportApp {
         scenario: scenario,
         first_mes: firstMes,
         mes_example: mesExample,
-        creator_notes: creatorNotes,
+        creator_notes: (creatorNotes ? (creatorNotes + "\n\n") : "") + "Exported via Dominion (JanitorAI Backup Suite)\nSpecs: SillyTavern V2 Chara Specification",
         system_prompt: "",
         post_history_instructions: "",
         alternate_greetings: altGreetings,
         tags: tags,
         creator: creatorName,
-        character_version: "1.0",
+        character_version: "Dominion V2",
         extensions: {
           janitor_id: bot.id,
           total_tokens: bot.tokens || bot.total_tokens || 0,
@@ -1359,11 +1498,11 @@ class ExportApp {
     if (elFoll) elFoll.innerText = (data.followers_count || 0).toLocaleString();
     if (elBots) elBots.innerText = (data.bot_count || data.total_bots || 0).toLocaleString();
 
-    let avatar = data.avatar || DEFAULT_AVATAR;
-    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:')) {
-      avatar = `https://ella.janitorai.com/bot-avatars/${avatar}`;
+    let avatar = this.resolveAvatarUrl(data.avatar, 'profile') || DEFAULT_AVATAR;
+    if (elAva) {
+      elAva.src = avatar;
+      elAva.onerror = () => { elAva.src = DEFAULT_AVATAR; };
     }
-    if (elAva) elAva.src = avatar;
 
     if (elBadge) {
       elBadge.innerHTML = (data.is_verified || data.plusbadge) ? ICONS_SVG.verified : '';
