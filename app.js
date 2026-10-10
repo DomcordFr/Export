@@ -1053,5 +1053,5 @@ class ExportApp {
   }
 }
 
-const app = new ExportApp();
+const app = new ExportApp(); window.app = app;
 window.addEventListener('DOMContentLoaded', () => app.init());
