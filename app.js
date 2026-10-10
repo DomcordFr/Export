@@ -78,6 +78,8 @@ class ExportApp {
   }
 
   switchTab(tab) {
+    if (this.activeTab === tab && this._tabReady) return;
+    this._tabReady = true;
     this.activeTab = tab;
 
     // Desktop nav buttons
@@ -92,13 +94,52 @@ class ExportApp {
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
 
-    // Views
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
-    if (viewVault) viewVault.style.display = tab === 'vault' ? 'block' : 'none';
-    if (viewCss) viewCss.style.display = tab === 'css' ? 'block' : 'none';
+    const currentView = tab === 'vault' ? viewVault : viewCss;
+    const leavingView = tab === 'vault' ? viewCss : viewVault;
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
+      if (leavingView) {
+        leavingView.classList.add('is-hidden');
+        leavingView.style.display = 'none';
+      }
+      if (currentView) {
+        currentView.classList.remove('is-hidden', 'is-leaving');
+        currentView.classList.add('is-entering');
+        currentView.style.display = 'block';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            currentView.classList.remove('is-entering');
+          });
+        });
+      }
+      return;
+    }
+
+    if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
+
+    leavingView.classList.remove('is-entering');
+    leavingView.classList.add('is-leaving');
+
+    this._tabTransitionTimeout = setTimeout(() => {
+      leavingView.classList.add('is-hidden');
+      leavingView.classList.remove('is-leaving');
+      leavingView.style.display = 'none';
+
+      if (currentView) {
+        currentView.classList.remove('is-hidden', 'is-leaving');
+        currentView.classList.add('is-entering');
+        currentView.style.display = 'block';
+
+        void currentView.offsetWidth; // Force reflow
+
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-entering');
+        });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 140);
   }
 
   setExportFormat(fmt) {
@@ -989,16 +1030,58 @@ class ExportApp {
     const input = document.getElementById('css-profile-input');
     if (input) {
       input.value = url;
+      this.onProfileInputChange();
       this.extractProfileCss();
+    }
+  }
+
+  onProfileInputChange() {
+    const input = document.getElementById('css-profile-input');
+    const clearBtn = document.getElementById('btn-clear-profile');
+    if (input && clearBtn) {
+      clearBtn.style.display = input.value.trim().length > 0 ? 'inline-flex' : 'none';
+    }
+  }
+
+  clearProfileInput() {
+    const input = document.getElementById('css-profile-input');
+    if (input) {
+      input.value = '';
+      this.onProfileInputChange();
+      input.focus();
+    }
+  }
+
+  async pasteProfileUrl() {
+    const input = document.getElementById('css-profile-input');
+    if (!input) return;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          input.value = text.trim();
+          this.onProfileInputChange();
+          input.focus();
+          this.showToast("Profile link pasted from clipboard!", "success");
+          return;
+        }
+      }
+      this.showToast("Clipboard is empty or inaccessible", "error");
+    } catch (err) {
+      input.focus();
+      this.showToast("Clipboard permission denied. Please paste manually (Ctrl+V)", "error");
     }
   }
 
   async extractProfileCss() {
     const input = document.getElementById('css-profile-input');
+    const btn = document.getElementById('btn-extract-profile');
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
       this.showToast("Please enter a Janitor profile link or @handle", "error");
+      input.focus();
       return;
     }
 
@@ -1008,6 +1091,12 @@ class ExportApp {
       profileId = profileMatch[1];
     } else if (rawInput.startsWith('@')) {
       profileId = rawInput.slice(1);
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      btn.innerHTML = `<span class="spinner-ring" style="width: 15px; height: 15px; border-width: 2px;"></span><span>Extracting...</span>`;
     }
 
     this.showToast(`Fetching profile "${profileId}"...`);
@@ -1083,11 +1172,24 @@ class ExportApp {
       this.extractedTxt = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
       this.renderExtractedStudio();
-      this.showToast("Profile styling & markup successfully extracted!");
+      this.showToast("Profile styling & markup successfully extracted!", "success");
 
     } catch (err) {
       console.error("Extract CSS error:", err);
       this.showToast(`Could not extract profile: ${err.message}`, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+        btn.innerHTML = `
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>Extract Profile</span>
+          <kbd class="kbd-badge">↵</kbd>
+        `;
+      }
     }
   }
 
@@ -1258,18 +1360,30 @@ class ExportApp {
   showToast(msg, type = "info") {
     const container = document.getElementById('toast-container');
     if (!container) return;
+
     const toast = document.createElement('div');
-    toast.className = `toast-message ${type === 'error' ? 'toast-error' : ''}`;
-    toast.innerText = msg;
+    toast.className = `toast-message ${type === 'error' ? 'toast-error' : type === 'success' ? 'toast-success' : ''}`;
+
+    let iconSvg = '';
+    if (type === 'error') {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    } else if (type === 'success') {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    }
+
+    toast.innerHTML = `${iconSvg}<span>${msg}</span>`;
     container.appendChild(toast);
+
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
+      toast.style.transform = 'translateY(10px) scale(0.96)';
       setTimeout(() => {
         if (toast.parentNode === container) {
           container.removeChild(toast);
         }
-      }, 300);
+      }, 260);
     }, 3200);
   }
 }

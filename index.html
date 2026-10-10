@@ -3758,54 +3758,106 @@
     }
 
     /* ==========================================================================
-       15. TOAST NOTIFICATIONS
+       15. CENTERED TOAST NOTIFICATIONS (LUXURY CARDS DESIGN SYSTEM)
        ========================================================================== */
+    .toast-container,
     .toast-stack {
       position: fixed;
-      bottom: var(--space-6);
-      right: var(--space-6);
-      z-index: 99;
+      bottom: var(--space-8);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100000;
       display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 8px;
       pointer-events: none;
+      width: auto;
+      max-width: 90vw;
     }
 
     @media (max-width: 820px) {
+      .toast-container,
       .toast-stack {
-        bottom: calc(var(--bottom-nav-height) + var(--space-4));
-        left: var(--space-4);
-        right: var(--space-4);
-        align-items: center;
+        bottom: calc(var(--bottom-nav-height, 64px) + 16px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: calc(100vw - 32px);
       }
     }
 
+    .toast-message,
     .toast-box {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px var(--space-4);
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      gap: 10px;
+      padding: 10px 18px;
+      background: rgba(17, 17, 21, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-hover);
+      border-radius: var(--radius-full);
       color: var(--text-primary);
+      font-family: var(--font-sans);
       font-size: var(--text-xs);
       font-weight: 600;
-      box-shadow: var(--shadow-md);
+      letter-spacing: -0.01em;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
       pointer-events: auto;
-      line-height: 0;
-      animation: toastIn var(--duration-normal) var(--ease-out);
-      transition: all var(--duration-normal) var(--ease-out);
+      white-space: normal;
+      max-width: 100%;
+      word-break: break-word;
+      animation: toastCenterIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .toast-box span {
-      line-height: 1.4;
+    [data-theme="light"] .toast-message,
+    [data-theme="light"] .toast-box {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: var(--text-primary);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
     }
 
-    @keyframes toastIn {
+    .toast-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+    }
+
+    .toast-message.toast-error,
+    .toast-box.toast-error {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(26, 14, 16, 0.96);
+      color: #FCA5A5;
+    }
+
+    .toast-message.toast-error .toast-icon,
+    .toast-box.toast-error .toast-icon {
+      color: #EF4444;
+    }
+
+    .toast-message.toast-success,
+    .toast-box.toast-success {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(12, 26, 20, 0.96);
+      color: #6EE7B7;
+    }
+
+    .toast-message.toast-success .toast-icon,
+    .toast-box.toast-success .toast-icon {
+      color: #10B981;
+    }
+
+    @keyframes toastCenterIn {
       from {
         opacity: 0;
-        transform: translateY(10px) scale(0.96);
+        transform: translateY(12px) scale(0.95);
       }
       to {
         opacity: 1;
@@ -5189,6 +5241,29 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
+/* View Panels Smooth Transition */
+.view-panel {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.view-panel.is-hidden {
+  display: none !important;
+}
+
+.view-panel.is-entering {
+  opacity: 0 !important;
+  transform: translateY(10px) !important;
+}
+
+.view-panel.is-leaving {
+  opacity: 0 !important;
+  transform: translateY(-8px) !important;
+  pointer-events: none !important;
+}
+
 /* Vault Hero & Form Panel */
 .vault-hero {
   padding: var(--space-8) 0 var(--space-6);
@@ -5450,28 +5525,181 @@
 .css-studio-wrap {
   padding-top: var(--space-6);
 }
+/* Luxury Profile Input Component */
+.profile-input-container,
 .css-search-bar {
-  max-width: 680px;
-  margin: 0 auto var(--space-5);
+  max-width: 740px;
+  margin: 0 auto var(--space-3);
   display: flex;
   gap: var(--space-2);
+  align-items: center;
+  width: 100%;
 }
-.css-search-input {
+
+.profile-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
   flex: 1;
-  height: 44px;
+  min-width: 0;
+}
+
+.profile-input-icon-slot {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.profile-input-field,
+.css-search-input {
+  width: 100%;
+  height: 48px;
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 0 var(--space-4);
+  padding: 0 108px 0 42px;
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  transition: all var(--duration-fast) var(--ease-out);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
 }
+
+.profile-input-field:hover,
+.css-search-input:hover {
+  border-color: var(--border-hover);
+}
+
+.profile-input-field:focus,
 .css-search-input:focus {
   outline: none;
+  background: var(--surface-2);
   border-color: var(--text-primary);
-  box-shadow: 0 0 0 1px var(--text-primary);
+  box-shadow: 0 0 0 1px var(--text-primary), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.profile-input-field::placeholder,
+.css-search-input::placeholder {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+.profile-input-actions {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.btn-paste-pill {
+  height: 34px !important;
+  padding: 0 12px !important;
+  font-size: var(--text-2xs) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  transition: all var(--duration-fast) var(--ease-out) !important;
+  user-select: none;
+}
+
+.btn-paste-pill:hover {
+  background: var(--surface-3) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-hover) !important;
+  transform: translateY(-1px);
+}
+
+.btn-paste-pill:active {
+  transform: translateY(0);
+}
+
+.btn-extract-profile {
+  height: 48px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.kbd-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .kbd-badge {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.profile-input-hints {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 auto var(--space-6);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  max-width: 740px;
+}
+
+.hint-tag {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.hint-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.hint-chip:hover {
+  background: var(--surface-2);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.hint-chip code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.hint-chip:hover code {
+  color: var(--text-primary);
 }
 
 .profile-meta-card {
@@ -6000,12 +6228,29 @@
     width: 100%;
     justify-content: space-between;
   }
+  .profile-input-container,
   .css-search-bar {
     flex-direction: column;
+    align-items: stretch;
     width: 100%;
+    gap: 8px;
   }
+  .btn-extract-profile {
+    width: 100%;
+    justify-content: center;
+    height: 44px;
+  }
+  .kbd-badge {
+    display: none;
+  }
+  .profile-input-field,
   .css-search-input {
     width: 100%;
+    padding-right: 86px;
+    height: 44px;
+  }
+  .profile-input-hints {
+    gap: 6px;
   }
   .profile-meta-body {
     flex-direction: column;
@@ -6220,7 +6465,7 @@
     <!-- ========================================== -->
     <!-- VIEW 1: BACKUP VAULT -->
     <!-- ========================================== -->
-    <section id="view-vault">
+    <section id="view-vault" class="view-panel is-active">
       <div class="vault-hero">
         <h1 class="vault-title">Export Character Cards & Vault</h1>
         <p class="vault-subtitle">
@@ -6405,20 +6650,76 @@
     <!-- ========================================== -->
     <!-- VIEW 2: PROFILE CSS & HTML STUDIO -->
     <!-- ========================================== -->
-    <section id="view-css" style="display: none;">
+    <section id="view-css" class="view-panel is-hidden" style="display: none;">
       <div class="vault-hero">
         <h1 class="vault-title">Profile CSS & HTML Studio</h1>
         <p class="vault-subtitle">
           Extract, beautify, and preview custom CSS styling and HTML divs from any Janitor creator profile in real time. Export pure <code>.css</code>, <code>.html</code>, or <code>.txt</code> files.
         </p>
 
-        <!-- Search Input -->
-        <div class="css-search-bar">
-          <input type="text" id="css-profile-input" class="css-search-input" placeholder="Paste Janitor profile link (e.g. janitorai.com/profiles/...) or @handle" onkeydown="if(event.key==='Enter') app.extractProfileCss()">
-          <button class="btn-primary-glow" style="height: 44px; white-space: nowrap;" onclick="app.extractProfileCss()">
-            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <!-- LUXURY PROFILE URL INPUT CARD -->
+        <div class="profile-input-container">
+          <div class="profile-input-wrap">
+            <div class="profile-input-icon-slot">
+              <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="css-profile-input" 
+              class="profile-input-field" 
+              placeholder="Paste Janitor profile link (janitorai.com/profiles/...) or @handle" 
+              autocomplete="off" 
+              spellcheck="false" 
+              oninput="app.onProfileInputChange()" 
+              onkeydown="if(event.key==='Enter') app.extractProfileCss(); if(event.key==='Escape') app.clearProfileInput();"
+            >
+            <div class="profile-input-actions">
+              <button 
+                type="button"
+                class="token-micro-btn" 
+                id="btn-clear-profile" 
+                onclick="app.clearProfileInput()" 
+                title="Clear input" 
+                style="display: none;"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+              <button 
+                type="button"
+                class="token-micro-btn btn-paste-pill" 
+                onclick="app.pasteProfileUrl()" 
+                title="Paste from clipboard"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Paste</span>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-primary-glow btn-extract-profile" id="btn-extract-profile" onclick="app.extractProfileCss()">
+            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
             <span>Extract Profile</span>
+            <kbd class="kbd-badge">↵</kbd>
           </button>
+        </div>
+
+        <div class="profile-input-hints">
+          <span class="hint-tag">Supported formats:</span>
+          <span class="hint-chip" onclick="app.setProfileUrl('janitorai.com/profiles/TheBoys')"><code>janitorai.com/profiles/...</code></span>
+          <span class="hint-chip" onclick="app.setProfileUrl('@TheBoys')"><code>@handle</code></span>
+          <span class="hint-chip" onclick="app.setProfileUrl('TheBoys')"><code>username</code></span>
         </div>
       </div>
 
@@ -6721,6 +7022,8 @@ class ExportApp {
   }
 
   switchTab(tab) {
+    if (this.activeTab === tab && this._tabReady) return;
+    this._tabReady = true;
     this.activeTab = tab;
 
     // Desktop nav buttons
@@ -6735,13 +7038,52 @@ class ExportApp {
     if (mBtnVault) mBtnVault.classList.toggle('is-active', tab === 'vault');
     if (mBtnCss) mBtnCss.classList.toggle('is-active', tab === 'css');
 
-    // Views
     const viewVault = document.getElementById('view-vault');
     const viewCss = document.getElementById('view-css');
-    if (viewVault) viewVault.style.display = tab === 'vault' ? 'block' : 'none';
-    if (viewCss) viewCss.style.display = tab === 'css' ? 'block' : 'none';
+    const currentView = tab === 'vault' ? viewVault : viewCss;
+    const leavingView = tab === 'vault' ? viewCss : viewVault;
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
+      if (leavingView) {
+        leavingView.classList.add('is-hidden');
+        leavingView.style.display = 'none';
+      }
+      if (currentView) {
+        currentView.classList.remove('is-hidden', 'is-leaving');
+        currentView.classList.add('is-entering');
+        currentView.style.display = 'block';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            currentView.classList.remove('is-entering');
+          });
+        });
+      }
+      return;
+    }
+
+    if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
+
+    leavingView.classList.remove('is-entering');
+    leavingView.classList.add('is-leaving');
+
+    this._tabTransitionTimeout = setTimeout(() => {
+      leavingView.classList.add('is-hidden');
+      leavingView.classList.remove('is-leaving');
+      leavingView.style.display = 'none';
+
+      if (currentView) {
+        currentView.classList.remove('is-hidden', 'is-leaving');
+        currentView.classList.add('is-entering');
+        currentView.style.display = 'block';
+
+        void currentView.offsetWidth; // Force reflow
+
+        requestAnimationFrame(() => {
+          currentView.classList.remove('is-entering');
+        });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 140);
   }
 
   setExportFormat(fmt) {
@@ -7632,16 +7974,58 @@ class ExportApp {
     const input = document.getElementById('css-profile-input');
     if (input) {
       input.value = url;
+      this.onProfileInputChange();
       this.extractProfileCss();
+    }
+  }
+
+  onProfileInputChange() {
+    const input = document.getElementById('css-profile-input');
+    const clearBtn = document.getElementById('btn-clear-profile');
+    if (input && clearBtn) {
+      clearBtn.style.display = input.value.trim().length > 0 ? 'inline-flex' : 'none';
+    }
+  }
+
+  clearProfileInput() {
+    const input = document.getElementById('css-profile-input');
+    if (input) {
+      input.value = '';
+      this.onProfileInputChange();
+      input.focus();
+    }
+  }
+
+  async pasteProfileUrl() {
+    const input = document.getElementById('css-profile-input');
+    if (!input) return;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          input.value = text.trim();
+          this.onProfileInputChange();
+          input.focus();
+          this.showToast("Profile link pasted from clipboard!", "success");
+          return;
+        }
+      }
+      this.showToast("Clipboard is empty or inaccessible", "error");
+    } catch (err) {
+      input.focus();
+      this.showToast("Clipboard permission denied. Please paste manually (Ctrl+V)", "error");
     }
   }
 
   async extractProfileCss() {
     const input = document.getElementById('css-profile-input');
+    const btn = document.getElementById('btn-extract-profile');
     if (!input) return;
     const rawInput = input.value.trim();
     if (!rawInput) {
       this.showToast("Please enter a Janitor profile link or @handle", "error");
+      input.focus();
       return;
     }
 
@@ -7651,6 +8035,12 @@ class ExportApp {
       profileId = profileMatch[1];
     } else if (rawInput.startsWith('@')) {
       profileId = rawInput.slice(1);
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      btn.innerHTML = `<span class="spinner-ring" style="width: 15px; height: 15px; border-width: 2px;"></span><span>Extracting...</span>`;
     }
 
     this.showToast(`Fetching profile "${profileId}"...`);
@@ -7726,11 +8116,24 @@ class ExportApp {
       this.extractedTxt = (tempDiv.textContent || tempDiv.innerText || '').trim();
 
       this.renderExtractedStudio();
-      this.showToast("Profile styling & markup successfully extracted!");
+      this.showToast("Profile styling & markup successfully extracted!", "success");
 
     } catch (err) {
       console.error("Extract CSS error:", err);
       this.showToast(`Could not extract profile: ${err.message}`, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+        btn.innerHTML = `
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>Extract Profile</span>
+          <kbd class="kbd-badge">↵</kbd>
+        `;
+      }
     }
   }
 
@@ -7901,18 +8304,30 @@ class ExportApp {
   showToast(msg, type = "info") {
     const container = document.getElementById('toast-container');
     if (!container) return;
+
     const toast = document.createElement('div');
-    toast.className = `toast-message ${type === 'error' ? 'toast-error' : ''}`;
-    toast.innerText = msg;
+    toast.className = `toast-message ${type === 'error' ? 'toast-error' : type === 'success' ? 'toast-success' : ''}`;
+
+    let iconSvg = '';
+    if (type === 'error') {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    } else if (type === 'success') {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else {
+      iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    }
+
+    toast.innerHTML = `${iconSvg}<span>${msg}</span>`;
     container.appendChild(toast);
+
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
+      toast.style.transform = 'translateY(10px) scale(0.96)';
       setTimeout(() => {
         if (toast.parentNode === container) {
           container.removeChild(toast);
         }
-      }, 300);
+      }, 260);
     }, 3200);
   }
 }
