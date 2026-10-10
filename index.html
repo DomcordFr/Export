@@ -1,0 +1,2749 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Export — JanitorAI Backup Suite & CSS Studio</title>
+  
+  <meta name="title" content="Export — JanitorAI Backup Suite & CSS Studio">
+  <meta name="description" content="Export your public and private JanitorAI bots, lorebooks, and personas into SillyTavern V2 cards. Extract creator profile CSS in 1 click. Zero-knowledge, fully client-side.">
+  <meta name="theme-color" content="#09090b">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://export.domcord.org/">
+  <meta property="og:site_name" content="Export">
+  <meta property="og:title" content="Export — JanitorAI Backup Suite & CSS Studio">
+  <meta property="og:description" content="Complete local JanitorAI backup engine: SillyTavern V2 PNG card compilation, lorebooks, personas, and live profile CSS extractor.">
+
+  <!-- Fonts & JSZip -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="assets/jszip.min.js"></script>
+  <script>
+    if (typeof JSZip === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+    }
+  </script>
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & OBSIDIAN PALETTE
+       ========================================================================== */
+    :root {
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Geist Mono', monospace;
+
+      --bg: #08080a;
+      --bg-elevated: #0e0e13;
+      --surface-1: #14141c;
+      --surface-2: #1b1b26;
+      --surface-3: #242433;
+      --surface-hover: #2d2d40;
+
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-active: rgba(139, 92, 246, 0.4);
+
+      --text-primary: #f4f4f7;
+      --text-secondary: #a1a1b0;
+      --text-muted: #6f6f82;
+
+      --accent-violet: #8b5cf6;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+
+      --glow-violet: 0 0 24px rgba(139, 92, 246, 0.28);
+      --glow-cyan: 0 0 24px rgba(6, 182, 212, 0.25);
+      --glow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.7);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --radius-full: 9999px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 50% 110%, rgba(99, 102, 241, 0.07) 0%, transparent 50%);
+    }
+
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* HEADER */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 8, 10, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .export-logo-svg {
+      width: 32px;
+      height: 32px;
+      overflow: visible;
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .brand-group:hover .export-logo-svg {
+      transform: translateY(-2px);
+    }
+
+    .brand-group:hover .ejecting-card {
+      transform: translateY(-3px);
+    }
+
+    .ejecting-card {
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      background: rgba(139, 92, 246, 0.14);
+      color: var(--accent-violet);
+      border: 1px solid rgba(139, 92, 246, 0.28);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-1);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+
+    .nav-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.825rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--surface-2);
+    }
+
+    .nav-tab-btn.active {
+      color: #ffffff;
+      background: var(--surface-3);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .privacy-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--accent-emerald);
+      font-size: 0.725rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .privacy-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    .icon-link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.16s ease;
+    }
+
+    .icon-link-btn:hover {
+      color: #fff;
+      border-color: var(--border-hover);
+      background: var(--surface-2);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 36px 0 64px 0;
+    }
+
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.24s var(--ease-out) forwards;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      color: #c4b5fd;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffffff 40%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* CARDS & FORMS */
+    .glass-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--glow-card);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .glass-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-violet);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+    }
+
+    .input-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .label-helper-link {
+      color: var(--accent-violet);
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .label-helper-link:hover {
+      text-decoration: underline;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      padding-right: 110px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.16s ease;
+    }
+
+    .text-input:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      background: var(--surface-3);
+    }
+
+    .input-actions-inner {
+      position: absolute;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inline-btn {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-sans);
+      transition: all 0.16s ease;
+    }
+
+    .inline-btn:hover {
+      background: var(--surface-hover);
+      color: #fff;
+      border-color: var(--border-hover);
+    }
+
+    .token-status-banner {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #a7f3d0;
+      font-size: 0.75rem;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .token-status-banner.error {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.2);
+      color: #fecdd3;
+    }
+
+    .scope-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      margin-bottom: 24px;
+    }
+
+    .scope-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      user-select: none;
+    }
+
+    .scope-card:hover {
+      border-color: var(--border-hover);
+      background: var(--surface-3);
+    }
+
+    .scope-card.checked {
+      border-color: rgba(139, 92, 246, 0.5);
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    .scope-checkbox {
+      margin-top: 3px;
+      accent-color: var(--accent-violet);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .scope-info {
+      flex: 1;
+    }
+
+    .scope-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scope-sub {
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-violet), var(--accent-indigo));
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 14px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s var(--ease-out);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(139, 92, 246, 0.45);
+      filter: brightness(1.05);
+    }
+
+    .primary-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* CATALOG */
+    .catalog-section {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .catalog-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-pill-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+
+    .stat-pill-label {
+      font-size: 0.725rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-pill-val {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 4px;
+    }
+
+    .catalog-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.775rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .filter-chip.active {
+      background: rgba(139, 92, 246, 0.15);
+      color: #fff;
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    .search-filter-input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 7px 12px;
+      color: #fff;
+      font-size: 0.8rem;
+      outline: none;
+      width: 220px;
+      font-family: var(--font-sans);
+    }
+
+    .search-filter-input:focus {
+      border-color: var(--accent-violet);
+    }
+
+    .bot-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 24px;
+    }
+
+    .bot-item-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: relative;
+      transition: all 0.16s ease;
+      cursor: pointer;
+    }
+
+    .bot-item-card:hover {
+      border-color: var(--border-hover);
+      background: var(--surface-3);
+    }
+
+    .bot-item-card.selected {
+      border-color: rgba(139, 92, 246, 0.4);
+      background: rgba(139, 92, 246, 0.06);
+    }
+
+    .bot-item-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--surface-3);
+      flex-shrink: 0;
+    }
+
+    .bot-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bot-item-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bot-item-tags {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+      align-items: center;
+    }
+
+    .badge-tag {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    .badge-public {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .badge-private {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .badge-lorebook {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .badge-persona {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-violet);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
+    .bot-token-pill {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* PROGRESS */
+    .progress-section {
+      display: none;
+      background: var(--surface-1);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: var(--radius-xl);
+      padding: 30px;
+      box-shadow: 0 0 36px rgba(139, 92, 246, 0.15);
+      margin-top: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .progress-status-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pulse-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .progress-percent-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+      border-radius: var(--radius-full);
+      transition: width 0.2s linear;
+      position: relative;
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.5);
+    }
+
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 1.8s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+    }
+
+    .metric-box-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .metric-box-val {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .activity-terminal {
+      background: #050507;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      height: 140px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #a1a1aa;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: #52525b;
+    }
+
+    .log-msg-success {
+      color: #34d399;
+    }
+
+    .log-msg-info {
+      color: #38bdf8;
+    }
+
+    .log-msg-warn {
+      color: #fbbf24;
+    }
+
+    .completion-banner {
+      display: none;
+      text-align: center;
+      padding: 32px 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .completion-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px auto;
+      color: var(--accent-emerald);
+      box-shadow: 0 0 32px rgba(16, 185, 129, 0.3);
+    }
+
+    .completion-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .completion-sub {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 480px;
+      margin: 0 auto 24px auto;
+    }
+
+    .download-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--accent-emerald), #059669);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 16px 32px;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .download-cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 32px rgba(16, 185, 129, 0.5);
+      filter: brightness(1.08);
+    }
+
+    /* CSS STUDIO */
+    .css-creator-card {
+      display: none;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .creator-banner-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 70px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.2));
+      opacity: 0.6;
+    }
+
+    .creator-header-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .creator-avatar-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid var(--surface-2);
+      object-fit: cover;
+      background: var(--surface-3);
+    }
+
+    .creator-details {
+      flex: 1;
+    }
+
+    .creator-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .creator-disp-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .creator-handle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .creator-followers-count {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .css-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .css-stat-item {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+
+    .css-stat-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+    }
+
+    .css-stat-name {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .css-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .css-action-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-pill-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: #ffffff;
+      transition: all 0.16s ease;
+    }
+
+    .action-pill-btn:hover {
+      background: var(--surface-3);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .action-pill-btn.primary {
+      background: var(--accent-violet);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .action-pill-btn.primary:hover {
+      background: #7c3aed;
+    }
+
+    .code-viewer-container {
+      background: #060608;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .code-viewer-header {
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .code-editor-area {
+      width: 100%;
+      height: 380px;
+      background: transparent;
+      color: #e4e4e7;
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+      padding: 14px;
+      border: none;
+      outline: none;
+      resize: vertical;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    .sandbox-preview-container {
+      display: none;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #0a0a0f;
+    }
+
+    .sandbox-preview-header {
+      background: var(--surface-1);
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sandbox-iframe {
+      width: 100%;
+      height: 440px;
+      border: none;
+      background: #09090b;
+    }
+
+    /* SETTINGS */
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-meta {
+      max-width: 65%;
+    }
+
+    .setting-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .setting-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .select-dropdown {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-family: var(--font-sans);
+      outline: none;
+    }
+
+    /* FOOTER */
+    .app-footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      background: var(--surface-1);
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-brand-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 1.75rem; }
+      .nav-tab-btn span { display: none; }
+      .privacy-pill span { display: none; }
+      .catalog-toolbar { flex-direction: column; align-items: stretch; }
+      .search-filter-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+
+  <div class="app-wrapper">
+    <!-- APP HEADER -->
+    <header class="app-header">
+      <div class="container header-inner">
+        <!-- Logo & Brand -->
+        <a class="brand-group" onclick="app.switchTab('backup')">
+          <svg class="export-logo-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="expGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8b5cf6"/>
+                <stop offset="50%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+              <linearGradient id="cardFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(139, 92, 246, 0.25)"/>
+                <stop offset="100%" stop-color="rgba(6, 182, 212, 0.1)"/>
+              </linearGradient>
+              <filter id="neonFilter" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="1" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <rect x="5" y="11" width="22" height="15" rx="3" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="#0d0d14"/>
+            <rect x="7" y="9" width="18" height="14" rx="2.5" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" fill="rgba(18,18,26,0.9)"/>
+            <g class="ejecting-card" filter="url(#neonFilter)">
+              <rect x="9" y="5" width="14" height="15" rx="2.5" stroke="url(#expGlow)" stroke-width="1.8" fill="url(#cardFill)"/>
+              <path d="M16 8V13M16 8L13.5 10.5M16 8L18.5 10.5" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="12" y1="15.5" x2="20" y2="15.5" stroke="url(#expGlow)" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+          </svg>
+          <span class="brand-title">
+            Export
+            <span class="brand-badge">v1.0</span>
+          </span>
+        </a>
+
+        <!-- Middle Navigation Tabs -->
+        <nav class="nav-tabs">
+          <button class="nav-tab-btn active" id="tab-btn-backup" onclick="app.switchTab('backup')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Backup Suite</span>
+          </button>
+          <button class="nav-tab-btn" id="tab-btn-css" onclick="app.switchTab('css')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <span>Profile CSS Studio</span>
+          </button>
+          <button class="nav-tab-btn" id="tab-btn-settings" onclick="app.switchTab('settings')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+
+        <!-- Right Indicators -->
+        <div class="header-actions">
+          <div class="privacy-pill" title="Tokens are handled in volatile memory and never stored">
+            <span class="privacy-dot"></span>
+            <span>Zero-Logs In-Memory</span>
+          </div>
+          <a class="icon-link-btn" href="https://github.com/DomcordFr/Export" target="_blank" title="GitHub Repository">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="main-content">
+      <div class="container">
+
+        <!-- VIEW 1: BACKUP SUITE -->
+        <section class="view-panel active" id="view-backup">
+          <div class="hero-section">
+            <div class="hero-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              SillyTavern V2 Compliant Exporter
+            </div>
+            <h1 class="hero-title">JanitorAI Backup Suite</h1>
+            <p class="hero-sub">Export all your public, unlisted, and private characters into drop-in SillyTavern V2 PNG cards, lorebooks, and personas directly in your browser.</p>
+          </div>
+
+          <!-- Step 1: Authentication & Scope Card -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <div class="card-title-group">
+                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div>
+                  <h2 class="card-title">1. Authentication & Scope</h2>
+                  <p class="card-desc">Paste your JanitorAI session token to discover and unmask your library.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="token-input">
+                <span>JanitorAI Supabase JWT Token</span>
+                <a class="label-helper-link" onclick="app.showTokenHelp()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  How to get your token (10s guide)
+                </a>
+              </label>
+              <div class="input-wrapper">
+                <input type="password" id="token-input" class="text-input" placeholder="eyJhbGciOiJ..." autocomplete="off" spellcheck="false" oninput="app.onTokenInput()">
+                <div class="input-actions-inner">
+                  <button type="button" class="inline-btn" id="btn-toggle-token" onclick="app.toggleTokenVisibility()">Show</button>
+                  <button type="button" class="inline-btn" onclick="app.pasteToken()">Paste</button>
+                </div>
+              </div>
+              <div class="token-status-banner" id="token-status-banner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                <span id="token-status-text">Valid Token</span>
+              </div>
+            </div>
+
+            <!-- Scope Selection -->
+            <label class="input-label">Select Items to Include in Backup</label>
+            <div class="scope-grid">
+              <label class="scope-card checked" id="scope-public-card">
+                <input type="checkbox" class="scope-checkbox" id="scope-public" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">
+                    <span>Public Bots</span>
+                    <span class="badge-tag badge-public">Live</span>
+                  </div>
+                  <p class="scope-sub">All published characters on your profile</p>
+                </div>
+              </label>
+
+              <label class="scope-card checked" id="scope-private-card">
+                <input type="checkbox" class="scope-checkbox" id="scope-private" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">
+                    <span>Private & Unlisted Bots</span>
+                    <span class="badge-tag badge-private">Protected</span>
+                  </div>
+                  <p class="scope-sub">Unlisted drafts & secret characters with unmasked prompts</p>
+                </div>
+              </label>
+
+              <label class="scope-card checked" id="scope-lorebooks-card">
+                <input type="checkbox" class="scope-checkbox" id="scope-lorebooks" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">
+                    <span>Lorebooks (Scripts)</span>
+                    <span class="badge-tag badge-lorebook">World Info</span>
+                  </div>
+                  <p class="scope-sub">Janitor script files converted to SillyTavern JSON</p>
+                </div>
+              </label>
+
+              <label class="scope-card checked" id="scope-personas-card">
+                <input type="checkbox" class="scope-checkbox" id="scope-personas" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">
+                    <span>Personas</span>
+                    <span class="badge-tag badge-persona">Profiles</span>
+                  </div>
+                  <p class="scope-sub">User persona definitions and avatars</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Format toggles -->
+            <label class="input-label">Output Formats</label>
+            <div class="scope-grid" style="margin-top: 8px;">
+              <label class="scope-card checked" id="fmt-png-card">
+                <input type="checkbox" class="scope-checkbox" id="fmt-png" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">SillyTavern V2 PNG Cards</div>
+                  <p class="scope-sub">Embedded chara metadata chunk directly in avatar PNG</p>
+                </div>
+              </label>
+              <label class="scope-card checked" id="fmt-json-card">
+                <input type="checkbox" class="scope-checkbox" id="fmt-json" checked onchange="app.updateScopeUI()">
+                <div class="scope-info">
+                  <div class="scope-label">Raw Definition JSONs</div>
+                  <p class="scope-sub">Full unfiltered prompts, greetings, & raw metadata</p>
+                </div>
+              </label>
+            </div>
+
+            <button type="button" class="primary-btn" id="btn-scan" onclick="app.scanLibrary()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Scan & Discover My Library</span>
+            </button>
+          </div>
+
+          <!-- Step 2: Catalog Discovery Grid -->
+          <div class="glass-card catalog-section" id="catalog-section">
+            <div class="glass-card-header">
+              <div class="card-title-group">
+                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <div>
+                  <h2 class="card-title">2. Discovered Items</h2>
+                  <p class="card-desc">Review your items before compiling into the backup zip.</p>
+                </div>
+              </div>
+              <button type="button" class="inline-btn" onclick="app.scanLibrary()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Refresh
+              </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="catalog-stats-row">
+              <div class="stat-pill-card">
+                <div class="stat-pill-label">Total Characters</div>
+                <div class="stat-pill-val" id="stat-total-chars">0</div>
+              </div>
+              <div class="stat-pill-card">
+                <div class="stat-pill-label">Private & Unlisted</div>
+                <div class="stat-pill-val" id="stat-private-chars" style="color: var(--accent-amber);">0</div>
+              </div>
+              <div class="stat-pill-card">
+                <div class="stat-pill-label">Lorebooks</div>
+                <div class="stat-pill-val" id="stat-lorebooks" style="color: var(--accent-cyan);">0</div>
+              </div>
+              <div class="stat-pill-card">
+                <div class="stat-pill-label">Personas</div>
+                <div class="stat-pill-val" id="stat-personas" style="color: var(--accent-violet);">0</div>
+              </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="catalog-toolbar">
+              <div class="filter-tabs-group">
+                <button type="button" class="filter-chip active" id="chip-all" onclick="app.setFilter('all')">All (<span id="count-all">0</span>)</button>
+                <button type="button" class="filter-chip" id="chip-chars" onclick="app.setFilter('characters')">Characters (<span id="count-chars">0</span>)</button>
+                <button type="button" class="filter-chip" id="chip-lores" onclick="app.setFilter('lorebooks')">Lorebooks (<span id="count-lores">0</span>)</button>
+                <button type="button" class="filter-chip" id="chip-personas" onclick="app.setFilter('personas')">Personas (<span id="count-personas">0</span>)</button>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" class="search-filter-input" placeholder="Search by name..." id="catalog-search" oninput="app.renderCatalog()">
+                <button type="button" class="inline-btn" onclick="app.toggleSelectAll()">Select All</button>
+              </div>
+            </div>
+
+            <!-- Grid -->
+            <div class="bot-cards-grid" id="bot-cards-grid"></div>
+
+            <button type="button" class="primary-btn" id="btn-start-export" onclick="app.startExport()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Compile & Download Backup Archive (<span id="btn-export-count">0</span> items)</span>
+            </button>
+          </div>
+
+          <!-- Step 3: Live Progress & Archiving Engine -->
+          <div class="progress-section" id="progress-section">
+            <div class="progress-header">
+              <div class="progress-status-title">
+                <span class="pulse-indicator"></span>
+                <span id="progress-headline">Compiling SillyTavern V2 Character Cards...</span>
+              </div>
+              <div class="progress-percent-val" id="progress-percent">0%</div>
+            </div>
+
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+
+            <div class="progress-metrics-strip">
+              <div class="metric-box">
+                <div class="metric-box-label">Items Processed</div>
+                <div class="metric-box-val" id="metric-items">0 / 0</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-box-label">Transfer Speed</div>
+                <div class="metric-box-val" id="metric-speed">0 items/s</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-box-label">Data Archived</div>
+                <div class="metric-box-val" id="metric-bytes">0.0 MB</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-box-label">Active Workers</div>
+                <div class="metric-box-val" id="metric-workers">3 Threads</div>
+              </div>
+            </div>
+
+            <div class="activity-terminal" id="activity-terminal"></div>
+          </div>
+
+          <!-- Step 4: Completion Banner -->
+          <div class="glass-card completion-banner" id="completion-banner">
+            <div class="completion-icon-wrapper">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h2 class="completion-title">Backup Complete & Archived!</h2>
+            <p class="completion-sub" id="completion-sub-text">Your JanitorAI characters, lorebooks, and personas have been compiled into a SillyTavern V2 ready archive.</p>
+            <button type="button" class="download-cta-btn" id="btn-download-final" onclick="app.downloadZipBlob()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download Backup Archive (.zip)</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- VIEW 2: PROFILE CSS STUDIO -->
+        <section class="view-panel" id="view-css">
+          <div class="hero-section">
+            <div class="hero-badge" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.25); color: #67e8f9;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+              JanitorAI Profile CSS Extractor
+            </div>
+            <h1 class="hero-title">Profile CSS Studio</h1>
+            <p class="hero-sub">Paste any JanitorAI profile link or creator UUID to extract, beautify, and export their custom CSS styles and bio layout.</p>
+          </div>
+
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <div class="card-title-group">
+                <svg class="card-title-icon" style="color: var(--accent-cyan);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <div>
+                  <h2 class="card-title">Extract Profile Styles</h2>
+                  <p class="card-desc">Enter a Janitor profile URL, creator ID, or handle.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="css-url-input">Creator Profile Link or UUID</label>
+              <div class="input-wrapper">
+                <input type="text" id="css-url-input" class="text-input" placeholder="https://janitorai.com/profiles/19e6816f-7d70-40ea-a3e1-20ececd48ed6" spellcheck="false">
+                <div class="input-actions-inner">
+                  <button type="button" class="inline-btn" onclick="app.pasteCssUrl()">Paste</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+              <span style="font-size: 0.725rem; color: var(--text-muted);">Quick test:</span>
+              <button type="button" class="inline-btn" onclick="app.loadExampleCss('19e6816f-7d70-40ea-a3e1-20ececd48ed6')">Mayu0910</button>
+              <button type="button" class="inline-btn" onclick="app.loadExampleCss('fc20007f-7248-47ba-9b59-52d7320a8f85')">Bearkin</button>
+            </div>
+
+            <button type="button" class="primary-btn" id="btn-extract-css" onclick="app.extractProfileCss()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Extract Custom CSS & Bio</span>
+            </button>
+          </div>
+
+          <!-- Creator Details & CSS Results -->
+          <div class="css-creator-card" id="css-creator-card">
+            <div class="creator-banner-bg" id="creator-banner"></div>
+            <div class="creator-header-inner">
+              <img id="creator-avatar" class="creator-avatar-img" src="" alt="Creator Avatar">
+              <div class="creator-details">
+                <div class="creator-name-row">
+                  <span class="creator-disp-name" id="creator-disp-name">Creator Name</span>
+                  <span class="badge-tag badge-public" id="creator-verified-badge" style="display: none;">Verified</span>
+                </div>
+                <div class="creator-handle" id="creator-handle">@handle</div>
+                <div class="creator-followers-count" id="creator-followers">0 followers</div>
+              </div>
+            </div>
+
+            <div class="css-stats-bar">
+              <div class="css-stat-item">
+                <div class="css-stat-num" id="css-stat-lines">0</div>
+                <div class="css-stat-name">CSS Lines</div>
+              </div>
+              <div class="css-stat-item">
+                <div class="css-stat-num" id="css-stat-size">0 KB</div>
+                <div class="css-stat-name">Style Size</div>
+              </div>
+              <div class="css-stat-item">
+                <div class="css-stat-num" id="css-stat-rules">0</div>
+                <div class="css-stat-name">CSS Selectors</div>
+              </div>
+              <div class="css-stat-item">
+                <div class="css-stat-num" id="css-stat-keyframes">0</div>
+                <div class="css-stat-name">Keyframes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Code View Area -->
+          <div class="glass-card" id="css-code-panel" style="display: none;">
+            <div class="css-actions-row">
+              <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">Extracted Stylesheet</div>
+              <div class="css-action-btn-group">
+                <button type="button" class="action-pill-btn" id="btn-copy-css" onclick="app.copyCss()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copy Clean CSS</span>
+                </button>
+                <button type="button" class="action-pill-btn" onclick="app.downloadCssFile()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download .css</span>
+                </button>
+                <button type="button" class="action-pill-btn primary" onclick="app.downloadCssZip()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Profile Bundle (.zip)</span>
+                </button>
+                <button type="button" class="action-pill-btn" id="btn-toggle-sandbox" onclick="app.toggleSandboxPreview()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>Live Preview</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="code-viewer-container">
+              <div class="code-viewer-header">
+                <span>profile_custom_styles.css</span>
+                <span id="code-viewer-size-tag">0 bytes</span>
+              </div>
+              <textarea class="code-editor-area" id="css-code-editor" readonly spellcheck="false"></textarea>
+            </div>
+
+            <div class="sandbox-preview-container" id="sandbox-preview-container">
+              <div class="sandbox-preview-header">
+                <span>Sandboxed Profile Render (Isolated iframe)</span>
+                <button type="button" class="inline-btn" onclick="app.refreshSandbox()">Reload Preview</button>
+              </div>
+              <iframe class="sandbox-iframe" id="sandbox-iframe" sandbox="allow-scripts"></iframe>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: SETTINGS -->
+        <section class="view-panel" id="view-settings">
+          <div class="hero-section">
+            <h1 class="hero-title">Settings & Diagnostics</h1>
+            <p class="hero-sub">Configure CORS gateway routing, batch concurrency, and connection health.</p>
+          </div>
+
+          <div class="glass-card">
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">CORS Gateway Mode</div>
+                <div class="setting-desc">Select how the browser sends requests to JanitorAI without CORS errors.</div>
+              </div>
+              <select class="select-dropdown" id="setting-gateway-mode" onchange="app.onGatewayModeChange()">
+                <option value="auto">Auto-Detect (Companion / Cloud)</option>
+                <option value="local">Local Companion (127.0.0.1:8095)</option>
+                <option value="cloud">Cloud Gateway (Export.Domcord.org)</option>
+                <option value="custom">Custom CORS Proxy URL</option>
+                <option value="direct">Direct Janitor Fetch (No CORS Proxy)</option>
+              </select>
+            </div>
+
+            <div class="setting-item" id="setting-custom-proxy-row" style="display: none;">
+              <div class="setting-meta">
+                <div class="setting-title">Custom Proxy Prefix</div>
+                <div class="setting-desc">URL prefix that prepends requests (e.g. custom Cloudflare Worker).</div>
+              </div>
+              <input type="text" class="text-input" id="setting-custom-proxy-url" style="width: 280px; padding-right: 12px;" placeholder="https://my-proxy.workers.dev/">
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Worker Concurrency</div>
+                <div class="setting-desc">Simultaneous downloads (Default 3 is safest against Cloudflare 429 limits).</div>
+              </div>
+              <select class="select-dropdown" id="setting-concurrency">
+                <option value="1">1 (Ultra Safe)</option>
+                <option value="2">2 (Conservative)</option>
+                <option value="3" selected>3 (Recommended)</option>
+                <option value="4">4 (Fast)</option>
+                <option value="6">6 (High Speed)</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Request Delay (Jitter)</div>
+                <div class="setting-desc">Milliseconds to wait between requests to prevent rate bursts.</div>
+              </div>
+              <select class="select-dropdown" id="setting-delay">
+                <option value="0">0ms (Instant)</option>
+                <option value="100" selected>100ms (Recommended)</option>
+                <option value="250">250ms (Safe)</option>
+                <option value="500">500ms (Strict)</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Connection Diagnostics</div>
+                <div class="setting-desc">Test latency and connectivity to JanitorAI through current gateway.</div>
+              </div>
+              <button type="button" class="action-pill-btn" onclick="app.testDiagnostics()">Test Connection</button>
+            </div>
+            <div id="diagnostics-result" style="font-family: var(--font-mono); font-size: 0.75rem; color: #a1a1aa; margin-top: 10px;"></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <div class="container footer-inner">
+        <div class="footer-brand-note">
+          <svg class="export-logo-svg" style="width: 16px; height: 16px;" viewBox="0 0 32 32" fill="none">
+            <rect x="5" y="11" width="22" height="15" rx="3" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="#14141c"/>
+            <rect x="9" y="5" width="14" height="15" rx="2.5" stroke="#8b5cf6" stroke-width="1.8" fill="rgba(139, 92, 246, 0.2)"/>
+          </svg>
+          <span>Export Suite — Built for the AI & SillyTavern community.</span>
+        </div>
+        <div>
+          <span>Zero-Knowledge • 100% Client-Side In-Memory Execution</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const CRC_TABLE = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      CRC_TABLE[i] = c >>> 0;
+    }
+
+    function calculateCrc32(bytes) {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    const JANITOR_GATEWAY = "https://janitorai.com/hampter";
+    const JANITOR_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jbXp4dHpvbW1wbnhreW5kZGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgzNzA3NDAsImV4cCI6MjA0Mzk0Njc0MH0.UfRPni4ga9Lmin8j0JjV5ouuK9bXp8tsqPJ8pMTDDAI";
+
+    class ExportApp {
+      constructor() {
+        this.token = "";
+        this.currentTab = "backup";
+        this.discoveredCharacters = [];
+        this.discoveredLorebooks = [];
+        this.discoveredPersonas = [];
+        this.catalogFilter = "all";
+        this.selectedIds = new Set();
+        this.zipInstance = null;
+        this.compiledZipBlob = null;
+        this.isExporting = false;
+
+        this.currentProfileData = null;
+        this.currentProfileCss = "";
+
+        this.init();
+      }
+
+      init() {
+        const savedToken = sessionStorage.getItem("janitor_session_token");
+        if (savedToken) {
+          this.token = savedToken;
+          document.getElementById("token-input").value = savedToken;
+          this.onTokenInput();
+        }
+
+        const host = window.location.hostname;
+        if (host === "127.0.0.1" || host === "localhost") {
+          document.getElementById("setting-gateway-mode").value = "local";
+        } else if (host.includes("export.domcord.org")) {
+          document.getElementById("setting-gateway-mode").value = "cloud";
+        } else {
+          document.getElementById("setting-gateway-mode").value = "auto";
+        }
+      }
+
+      switchTab(tab) {
+        this.currentTab = tab;
+        document.querySelectorAll(".nav-tab-btn").forEach(btn => btn.classList.remove("active"));
+        document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+
+        const tabBtn = document.getElementById(`tab-btn-${tab}`);
+        const viewPanel = document.getElementById(`view-${tab}`);
+        if (tabBtn) tabBtn.classList.add("active");
+        if (viewPanel) viewPanel.classList.add("active");
+      }
+
+      getApiUrl(endpoint) {
+        const mode = document.getElementById("setting-gateway-mode").value;
+        const cleanEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+
+        if (mode === "local") {
+          return `/hampter/${cleanEndpoint}`;
+        } else if (mode === "cloud") {
+          return `https://export.domcord.org/hampter/${cleanEndpoint}`;
+        } else if (mode === "custom") {
+          const custom = document.getElementById("setting-custom-proxy-url").value.trim().replace(/\/$/, "");
+          return `${custom}/https://janitorai.com/hampter/${cleanEndpoint}`;
+        } else if (mode === "direct") {
+          return `https://janitorai.com/hampter/${cleanEndpoint}`;
+        } else {
+          if (window.location.protocol.startsWith("http")) {
+            return `/hampter/${cleanEndpoint}`;
+          }
+          return `https://export.domcord.org/hampter/${cleanEndpoint}`;
+        }
+      }
+
+      getHeaders() {
+        const headers = {
+          "Accept": "application/json, text/plain, */*",
+          "apikey": JANITOR_ANON_KEY
+        };
+        if (this.token) {
+          headers["Authorization"] = `Bearer ${this.token}`;
+          headers["X-Janitor-Token"] = this.token;
+        }
+        return headers;
+      }
+
+      onTokenInput() {
+        const val = document.getElementById("token-input").value.trim();
+        this.token = val;
+        const banner = document.getElementById("token-status-banner");
+        const statusText = document.getElementById("token-status-text");
+
+        if (!val) {
+          banner.style.display = "none";
+          sessionStorage.removeItem("janitor_session_token");
+          return;
+        }
+
+        sessionStorage.setItem("janitor_session_token", val);
+
+        try {
+          const parts = val.split(".");
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            const exp = payload.exp ? new Date(payload.exp * 1000) : null;
+            const email = payload.email || "Active User";
+
+            banner.className = "token-status-banner";
+            banner.style.display = "flex";
+            statusText.innerText = `Connected: ${email} • Expires: ${exp ? exp.toLocaleDateString() : 'Valid'}`;
+            return;
+          }
+        } catch (e) {}
+
+        banner.className = "token-status-banner";
+        banner.style.display = "flex";
+        statusText.innerText = `Token Loaded (${val.length} chars)`;
+      }
+
+      toggleTokenVisibility() {
+        const input = document.getElementById("token-input");
+        const btn = document.getElementById("btn-toggle-token");
+        if (input.type === "password") {
+          input.type = "text";
+          btn.innerText = "Hide";
+        } else {
+          input.type = "password";
+          btn.innerText = "Show";
+        }
+      }
+
+      async pasteToken() {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            document.getElementById("token-input").value = text.trim();
+            this.onTokenInput();
+          }
+        } catch (err) {
+          alert("Clipboard access was denied. Please paste directly using Ctrl+V or Cmd+V.");
+        }
+      }
+
+      showTokenHelp() {
+        alert("How to get your Janitor token in 10 seconds:\n\n1. Open JanitorAI.com and log in.\n2. Press F12 (or right click -> Inspect) to open Developer Tools.\n3. Go to Application tab -> Local Storage -> https://janitorai.com\n4. Find the key starting with 'sb-...-auth-token'.\n5. Copy the 'access_token' value (starts with eyJ...) and paste it here!");
+      }
+
+      updateScopeUI() {
+        ["public", "private", "lorebooks", "personas"].forEach(id => {
+          const cb = document.getElementById(`scope-${id}`);
+          const card = document.getElementById(`scope-${id}-card`);
+          if (cb && card) {
+            if (cb.checked) card.classList.add("checked");
+            else card.classList.remove("checked");
+          }
+        });
+      }
+
+      async scanLibrary() {
+        if (!this.token) {
+          alert("Please paste your JanitorAI Supabase JWT token first.");
+          document.getElementById("token-input").focus();
+          return;
+        }
+
+        const scanBtn = document.getElementById("btn-scan");
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = `
+          <svg class="export-logo-svg" style="width: 16px; height: 16px; animation: pulse 1s infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Scanning JanitorAI Account...</span>
+        `;
+
+        this.discoveredCharacters = [];
+        this.discoveredLorebooks = [];
+        this.discoveredPersonas = [];
+        this.selectedIds.clear();
+
+        try {
+          const includePublic = document.getElementById("scope-public").checked;
+          const includePrivate = document.getElementById("scope-private").checked;
+          const includeLorebooks = document.getElementById("scope-lorebooks").checked;
+          const includePersonas = document.getElementById("scope-personas").checked;
+
+          let page = 1;
+          let totalBots = 0;
+          let keepGoing = true;
+
+          while (keepGoing) {
+            const url = this.getApiUrl(`characters/v2/mine?page=${page}`);
+            const resp = await fetch(url, { headers: this.getHeaders() });
+            if (!resp.ok) {
+              if (resp.status === 401 || resp.status === 403) {
+                throw new Error("Invalid or expired token. Please verify your Janitor token.");
+              }
+              break;
+            }
+            const resJson = await resp.json();
+            const list = resJson.data || [];
+            totalBots = resJson.total || list.length;
+
+            if (list.length === 0) break;
+
+            for (const bot of list) {
+              const isPub = Boolean(bot.is_public);
+              if (isPub && !includePublic) continue;
+              if (!isPub && !includePrivate) continue;
+
+              bot._type = "character";
+              this.discoveredCharacters.push(bot);
+              this.selectedIds.add(bot.id);
+            }
+
+            if (this.discoveredCharacters.length >= totalBots || list.length < 20 || page >= 50) {
+              keepGoing = false;
+            } else {
+              page++;
+            }
+          }
+
+          if (includeLorebooks) {
+            try {
+              const loreResp = await fetch(this.getApiUrl("script/mine"), { headers: this.getHeaders() });
+              if (loreResp.ok) {
+                const loreList = await loreResp.json();
+                if (Array.isArray(loreList)) {
+                  for (const lb of loreList) {
+                    lb._type = "lorebook";
+                    this.discoveredLorebooks.push(lb);
+                    this.selectedIds.add(lb.id);
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn("Could not scan lorebooks:", e);
+            }
+          }
+
+          if (includePersonas) {
+            try {
+              const personaResp = await fetch(this.getApiUrl("personas/mine"), { headers: this.getHeaders() });
+              if (personaResp.ok) {
+                const pList = await personaResp.json();
+                if (Array.isArray(pList)) {
+                  for (const p of pList) {
+                    p._type = "persona";
+                    this.discoveredPersonas.push(p);
+                    this.selectedIds.add(p.id);
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn("Could not scan personas:", e);
+            }
+          }
+
+          document.getElementById("catalog-section").style.display = "block";
+          document.getElementById("stat-total-chars").innerText = this.discoveredCharacters.length;
+          document.getElementById("stat-private-chars").innerText = this.discoveredCharacters.filter(b => !b.is_public).length;
+          document.getElementById("stat-lorebooks").innerText = this.discoveredLorebooks.length;
+          document.getElementById("stat-personas").innerText = this.discoveredPersonas.length;
+
+          document.getElementById("count-all").innerText = this.discoveredCharacters.length + this.discoveredLorebooks.length + this.discoveredPersonas.length;
+          document.getElementById("count-chars").innerText = this.discoveredCharacters.length;
+          document.getElementById("count-lores").innerText = this.discoveredLorebooks.length;
+          document.getElementById("count-personas").innerText = this.discoveredPersonas.length;
+
+          this.renderCatalog();
+        } catch (err) {
+          alert(`Scanning failed: ${err.message}`);
+        } finally {
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Scan & Discover My Library</span>
+          `;
+        }
+      }
+
+      setFilter(filter) {
+        this.catalogFilter = filter;
+        document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+        document.getElementById(`chip-${filter === 'characters' ? 'chars' : (filter === 'lorebooks' ? 'lores' : filter)}`).classList.add("active");
+        this.renderCatalog();
+      }
+
+      getAllItems() {
+        let items = [];
+        if (this.catalogFilter === "all" || this.catalogFilter === "characters") {
+          items = items.concat(this.discoveredCharacters);
+        }
+        if (this.catalogFilter === "all" || this.catalogFilter === "lorebooks") {
+          items = items.concat(this.discoveredLorebooks);
+        }
+        if (this.catalogFilter === "all" || this.catalogFilter === "personas") {
+          items = items.concat(this.discoveredPersonas);
+        }
+        return items;
+      }
+
+      renderCatalog() {
+        const grid = document.getElementById("bot-cards-grid");
+        const query = (document.getElementById("catalog-search").value || "").toLowerCase().trim();
+        const items = this.getAllItems();
+
+        let filtered = items;
+        if (query) {
+          filtered = items.filter(it => (it.name || it.title || "").toLowerCase().includes(query));
+        }
+
+        document.getElementById("btn-export-count").innerText = this.selectedIds.size;
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 32px;">No items match your criteria.</div>`;
+          return;
+        }
+
+        grid.innerHTML = filtered.map(it => {
+          const isSelected = this.selectedIds.has(it.id);
+          const type = it._type || "character";
+          let badgeHtml = '';
+          let thumb = '';
+
+          if (type === "character") {
+            const isPub = Boolean(it.is_public);
+            badgeHtml = isPub ? '<span class="badge-tag badge-public">Public</span>' : '<span class="badge-tag badge-private">Private</span>';
+            const avatar = it.avatar ? (it.avatar.startsWith('http') ? it.avatar : `https://ella.janitorai.com/bot-avatars/${it.avatar}`) : '';
+            thumb = avatar ? `<img class="bot-item-thumb" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'48\\' height=\\'48\\'%3E%3Crect width=\\'48\\' height=\\'48\\' fill=\\'%231b1b26\\'/ %3E%3C/svg%3E'">` : '<div class="bot-item-thumb"></div>';
+          } else if (type === "lorebook") {
+            badgeHtml = '<span class="badge-tag badge-lorebook">Lorebook</span>';
+            thumb = '<div class="bot-item-thumb" style="display:flex;align-items:center;justify-content:center;background:rgba(6,182,212,0.1);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>';
+          } else {
+            badgeHtml = '<span class="badge-tag badge-persona">Persona</span>';
+            thumb = '<div class="bot-item-thumb" style="display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.1);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg></div>';
+          }
+
+          const tokens = it.tokens || it.total_tokens ? `${it.tokens || it.total_tokens} tokens` : '';
+
+          return `
+            <div class="bot-item-card ${isSelected ? 'selected' : ''}" onclick="app.toggleItem('${it.id}')">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); app.toggleItem('${it.id}')">
+              ${thumb}
+              <div class="bot-item-info">
+                <div class="bot-item-title">${this.escapeHtml(it.name || it.title || 'Untitled')}</div>
+                <div class="bot-item-tags">
+                  ${badgeHtml}
+                  ${tokens ? `<span class="bot-token-pill">${tokens}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      toggleItem(id) {
+        if (this.selectedIds.has(id)) {
+          this.selectedIds.delete(id);
+        } else {
+          this.selectedIds.add(id);
+        }
+        this.renderCatalog();
+      }
+
+      toggleSelectAll() {
+        const items = this.getAllItems();
+        if (this.selectedIds.size === items.length) {
+          this.selectedIds.clear();
+        } else {
+          items.forEach(it => this.selectedIds.add(it.id));
+        }
+        this.renderCatalog();
+      }
+
+      async startExport() {
+        if (this.selectedIds.size === 0) {
+          alert("Please select at least one item to export.");
+          return;
+        }
+
+        this.isExporting = true;
+        const progressSection = document.getElementById("progress-section");
+        const completionBanner = document.getElementById("completion-banner");
+        progressSection.style.display = "block";
+        completionBanner.style.display = "none";
+
+        progressSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+        this.logMessage("Starting JanitorAI Full Archive generation...", "info");
+        this.zipInstance = new JSZip();
+
+        const rootFolder = this.zipInstance;
+        const charactersPngFolder = rootFolder.folder("characters/sillytavern_png");
+        const charactersJsonFolder = rootFolder.folder("characters/raw_json");
+        const lorebooksFolder = rootFolder.folder("lorebooks");
+        const personasFolder = rootFolder.folder("personas");
+
+        const selectedList = [
+          ...this.discoveredCharacters.filter(b => this.selectedIds.has(b.id)),
+          ...this.discoveredLorebooks.filter(l => this.selectedIds.has(l.id)),
+          ...this.discoveredPersonas.filter(p => this.selectedIds.has(p.id))
+        ];
+
+        const totalItems = selectedList.length;
+        let processedCount = 0;
+        const startTime = Date.now();
+
+        const concurrency = parseInt(document.getElementById("setting-concurrency").value, 10) || 3;
+        const jitter = parseInt(document.getElementById("setting-delay").value, 10) || 100;
+
+        document.getElementById("metric-workers").innerText = `${concurrency} Threads`;
+
+        let index = 0;
+        const manifest = {
+          export_date: new Date().toISOString(),
+          version: "1.0",
+          total_items: totalItems,
+          items: []
+        };
+
+        const worker = async () => {
+          while (index < selectedList.length && this.isExporting) {
+            const currentItem = selectedList[index++];
+            const itemType = currentItem._type;
+
+            try {
+              if (itemType === "character") {
+                await this.exportSingleCharacter(currentItem, charactersPngFolder, charactersJsonFolder);
+              } else if (itemType === "lorebook") {
+                await this.exportSingleLorebook(currentItem, lorebooksFolder);
+              } else if (itemType === "persona") {
+                await this.exportSinglePersona(currentItem, personasFolder);
+              }
+
+              manifest.items.push({
+                id: currentItem.id,
+                name: currentItem.name,
+                type: itemType,
+                is_public: currentItem.is_public
+              });
+
+              processedCount++;
+              const pct = Math.round((processedCount / totalItems) * 100);
+
+              document.getElementById("progress-bar-fill").style.width = `${pct}%`;
+              document.getElementById("progress-percent").innerText = `${pct}%`;
+              document.getElementById("metric-items").innerText = `${processedCount} / ${totalItems}`;
+
+              const elapsedSec = (Date.now() - startTime) / 1000;
+              const speed = (processedCount / (elapsedSec || 1)).toFixed(1);
+              document.getElementById("metric-speed").innerText = `${speed} items/s`;
+
+              this.logMessage(`Archived [${itemType}]: "${currentItem.name || currentItem.id}"`, "success");
+
+              if (jitter > 0) {
+                await new Promise(r => setTimeout(r, jitter));
+              }
+            } catch (err) {
+              this.logMessage(`Failed "${currentItem.name || currentItem.id}": ${err.message}`, "warn");
+            }
+          }
+        };
+
+        const workers = [];
+        for (let i = 0; i < concurrency; i++) {
+          workers.push(worker());
+        }
+
+        await Promise.all(workers);
+
+        rootFolder.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+        this.logMessage("Compressing in-memory ZIP package...", "info");
+        document.getElementById("progress-headline").innerText = "Generating Final Archive Blob...";
+
+        const zipBlob = await this.zipInstance.generateAsync({
+          type: "blob",
+          compression: "DEFLATE",
+          compressionOptions: { level: 6 }
+        }, (meta) => {
+          document.getElementById("metric-bytes").innerText = `${(meta.percent * 0.5).toFixed(1)} MB`;
+        });
+
+        this.compiledZipBlob = zipBlob;
+        const mbSize = (zipBlob.size / (1024 * 1024)).toFixed(1);
+        document.getElementById("metric-bytes").innerText = `${mbSize} MB`;
+
+        this.logMessage(`Complete! Generated archive size: ${mbSize} MB`, "success");
+
+        progressSection.style.display = "none";
+        completionBanner.style.display = "block";
+        document.getElementById("completion-sub-text").innerText = `Successfully archived ${processedCount} items into a clean ${mbSize} MB package. Ready to download!`;
+      }
+
+      async exportSingleCharacter(bot, pngFolder, jsonFolder) {
+        const fullResp = await fetch(this.getApiUrl(`characters/${bot.id}`), { headers: this.getHeaders() });
+        const fullBot = fullResp.ok ? await fullResp.json() : bot;
+
+        const safeName = (bot.name || "character").replace(/[/\\?%*:|"<>]/g, "_").trim();
+
+        if (document.getElementById("fmt-json").checked) {
+          jsonFolder.file(`${safeName}_${bot.id.slice(0, 8)}.json`, JSON.stringify(fullBot, null, 2));
+        }
+
+        if (document.getElementById("fmt-png").checked) {
+          const cardV2 = this.buildSillyTavernV2Card(fullBot);
+          const avatarUrl = fullBot.avatar ? (fullBot.avatar.startsWith('http') ? fullBot.avatar : `https://ella.janitorai.com/bot-avatars/${fullBot.avatar}`) : null;
+
+          const pngBuffer = await this.compileSillyTavernPngBuffer(cardV2, avatarUrl, safeName);
+          pngFolder.file(`${safeName}_v2.png`, pngBuffer);
+        }
+      }
+
+      async exportSingleLorebook(lorebook, folder) {
+        const contentResp = await fetch(this.getApiUrl(`script/${lorebook.id}/content`), { headers: this.getHeaders() });
+        const content = contentResp.ok ? await contentResp.json() : {};
+
+        const safeName = (lorebook.name || "lorebook").replace(/[/\\?%*:|"<>]/g, "_").trim();
+
+        folder.file(`Janitor_${safeName}.json`, JSON.stringify({ ...lorebook, content }, null, 2));
+
+        const stWorldInfo = this.convertJanitorToSillyTavernWorldInfo(lorebook, content);
+        folder.file(`SillyTavern_${safeName}.json`, JSON.stringify(stWorldInfo, null, 2));
+      }
+
+      async exportSinglePersona(persona, folder) {
+        const safeName = (persona.name || "persona").replace(/[/\\?%*:|"<>]/g, "_").trim();
+        folder.file(`${safeName}.json`, JSON.stringify(persona, null, 2));
+
+        if (persona.avatar) {
+          try {
+            const avaUrl = persona.avatar.startsWith('http') ? persona.avatar : `https://ella.janitorai.com/bot-avatars/${persona.avatar}`;
+            const avaResp = await fetch(avaUrl);
+            if (avaResp.ok) {
+              const buf = await avaResp.arrayBuffer();
+              folder.file(`${safeName}_avatar.png`, buf);
+            }
+          } catch (e) {}
+        }
+      }
+
+      buildSillyTavernV2Card(bot) {
+        const name = (bot.name || "Character").trim();
+        const desc = bot.personality || bot.description || "";
+        const scenario = bot.scenario || "";
+        const firstMes = bot.first_message || bot.firstMessage || "";
+        const mesExample = bot.example_dialogs || "";
+        const creatorName = bot.creator_name || bot.creatorName || "";
+
+        const altGreetings = [];
+        const rawGreetings = bot.greetings || bot.first_messages || [];
+        for (const g of rawGreetings) {
+          const t = typeof g === 'object' ? (g.text || g.message || '') : String(g);
+          if (t && t !== firstMes) altGreetings.push(t);
+        }
+
+        const tags = (bot.tags || []).map(t => (typeof t === 'object' ? t.name || t.tag : String(t))).filter(Boolean);
+
+        return {
+          spec: "chara_card_v2",
+          spec_version: "2.0",
+          data: {
+            name: name,
+            description: desc,
+            personality: desc,
+            scenario: scenario,
+            first_mes: firstMes,
+            mes_example: mesExample,
+            creator_notes: bot.description || "",
+            system_prompt: "",
+            post_history_instructions: "",
+            alternate_greetings: altGreetings,
+            character_book: null,
+            tags: tags,
+            creator: creatorName,
+            character_version: "1.0",
+            extensions: {
+              janitor_id: bot.id,
+              total_tokens: bot.tokens || bot.total_tokens || 0,
+              creator_id: bot.creator_id,
+              greetings: [
+                { title: "Greeting 1", text: firstMes },
+                ...altGreetings.map((g, i) => ({ title: `Greeting ${i + 2}`, text: g }))
+              ]
+            }
+          }
+        };
+      }
+
+      convertJanitorToSillyTavernWorldInfo(lorebook, content) {
+        const entries = {};
+        const rawEntries = Array.isArray(content) ? content : (content.entries || []);
+
+        rawEntries.forEach((entry, idx) => {
+          let keys = [];
+          if (Array.isArray(entry.keys)) keys = entry.keys;
+          else if (typeof entry.keys === 'string') keys = entry.keys.split(',').map(k => k.trim()).filter(Boolean);
+
+          entries[String(idx)] = {
+            uid: idx,
+            key: keys,
+            keysecondary: [],
+            comment: entry.comment || entry.title || `Entry ${idx + 1}`,
+            content: entry.content || "",
+            constant: Boolean(entry.constant),
+            vectorized: false,
+            selective: true,
+            order: entry.order || 100,
+            position: 0,
+            use_regex: false,
+            extensions: {}
+          };
+        });
+
+        return {
+          original_name: lorebook.name || "Lorebook",
+          description: lorebook.description || "",
+          entries: entries
+        };
+      }
+
+      async compileSillyTavernPngBuffer(cardV2, avatarUrl, name) {
+        let imageBlob = null;
+        if (avatarUrl) {
+          try {
+            const resp = await fetch(avatarUrl);
+            if (resp.ok) imageBlob = await resp.blob();
+          } catch (e) {}
+        }
+
+        if (!imageBlob) {
+          imageBlob = await this.generateFallbackAvatarBlob(name);
+        }
+
+        const pngArrayBuffer = await this.blobToPngArrayBuffer(imageBlob);
+
+        const jsonStr = JSON.stringify(cardV2);
+        const b64Str = btoa(unescape(encodeURIComponent(jsonStr)));
+        return this.injectCharaChunk(pngArrayBuffer, b64Str);
+      }
+
+      async generateFallbackAvatarBlob(name) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 768;
+        const ctx = canvas.getContext("2d");
+
+        const grad = ctx.createLinearGradient(0, 0, 512, 768);
+        grad.addColorStop(0, "#0e0e14");
+        grad.addColorStop(1, "#181824");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 512, 768);
+
+        ctx.strokeStyle = "rgba(139, 92, 246, 0.4)";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(16, 16, 480, 736);
+
+        ctx.fillStyle = "#222230";
+        ctx.fillRect(196, 320, 120, 120);
+        ctx.strokeStyle = "#8b5cf6";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(196, 320, 120, 120);
+
+        const initials = (name || "C").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "C";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 44px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(initials, 256, 380);
+
+        return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      }
+
+      async blobToPngArrayBuffer(blob) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob((b) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsArrayBuffer(b);
+            }, "image/png");
+          };
+          img.onerror = () => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(blob);
+          };
+          img.src = URL.createObjectURL(blob);
+        });
+      }
+
+      injectCharaChunk(pngArrayBuffer, base64Payload) {
+        const u8 = new Uint8Array(pngArrayBuffer);
+        const keyword = "chara\0";
+        const textBytes = new TextEncoder().encode(keyword + base64Payload);
+        const dataLen = textBytes.length;
+
+        const chunkTotalLen = 4 + 4 + dataLen + 4;
+        const chunk = new Uint8Array(chunkTotalLen);
+        const view = new DataView(chunk.buffer);
+
+        view.setUint32(0, dataLen, false);
+        chunk[4] = 0x74; chunk[5] = 0x45; chunk[6] = 0x58; chunk[7] = 0x74;
+        chunk.set(textBytes, 8);
+
+        const crcSlice = chunk.subarray(4, 8 + dataLen);
+        const crc = calculateCrc32(crcSlice);
+        view.setUint32(8 + dataLen, crc, false);
+
+        let insertPos = 33;
+        if (u8.length > 33 && u8[12] === 0x49 && u8[13] === 0x48 && u8[14] === 0x44 && u8[15] === 0x52) {
+          const ihdrDataLen = new DataView(u8.buffer).getUint32(8, false);
+          insertPos = 8 + 4 + 4 + ihdrDataLen + 4;
+        }
+
+        const result = new Uint8Array(u8.length + chunkTotalLen);
+        result.set(u8.subarray(0, insertPos), 0);
+        result.set(chunk, insertPos);
+        result.set(u8.subarray(insertPos), insertPos + chunkTotalLen);
+
+        return result.buffer;
+      }
+
+      downloadZipBlob() {
+        if (!this.compiledZipBlob) return;
+        const url = URL.createObjectURL(this.compiledZipBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        const now = new Date().toISOString().split("T")[0];
+        a.download = `JanitorAI_Backup_${now}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      /* PROFILE CSS STUDIO */
+      async pasteCssUrl() {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) document.getElementById("css-url-input").value = text.trim();
+        } catch (e) {}
+      }
+
+      loadExampleCss(id) {
+        document.getElementById("css-url-input").value = `https://janitorai.com/profiles/${id}`;
+        this.extractProfileCss();
+      }
+
+      async extractProfileCss() {
+        const input = document.getElementById("css-url-input").value.trim();
+        if (!input) {
+          alert("Please enter a JanitorAI profile URL, creator ID, or handle.");
+          return;
+        }
+
+        const uuidMatch = input.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+        const creatorId = uuidMatch ? uuidMatch[1].toLowerCase() : input.replace(/^@/, "").trim();
+
+        const btn = document.getElementById("btn-extract-css");
+        btn.disabled = true;
+        btn.innerHTML = `
+          <svg class="export-logo-svg" style="width: 16px; height: 16px; animation: pulse 1s infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Extracting Styles & Bio...</span>
+        `;
+
+        try {
+          const resp = await fetch(this.getApiUrl(`profiles/${creatorId}`), { headers: this.getHeaders() });
+          if (!resp.ok) {
+            throw new Error(`Profile lookup failed with HTTP ${resp.status}`);
+          }
+
+          const profile = await resp.json();
+          this.currentProfileData = profile;
+
+          const aboutMe = profile.about_me || "";
+          const customStyle = (profile.style && profile.style.custom_style) ? profile.style.custom_style : "";
+
+          let rawCss = "";
+          const styleMatches = aboutMe.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+          for (const m of styleMatches) {
+            rawCss += "\n" + m[1];
+          }
+
+          if (customStyle) {
+            rawCss += "\n" + customStyle;
+          }
+
+          const formattedCss = this.beautifyCss(rawCss || "/* No custom <style> rules detected in this creator's profile bio. */");
+          this.currentProfileCss = formattedCss;
+
+          document.getElementById("css-creator-card").style.display = "block";
+          document.getElementById("css-code-panel").style.display = "block";
+
+          const avatar = profile.avatar ? (profile.avatar.startsWith('http') ? profile.avatar : `https://ella.janitorai.com/bot-avatars/${profile.avatar}`) : '';
+          document.getElementById("creator-avatar").src = avatar || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'64\\' height=\\'64\\'%3E%3Crect width=\\'64\\' height=\\'64\\' fill=\\'%231b1b26\\'/ %3E%3C/svg%3E';
+          document.getElementById("creator-disp-name").innerText = profile.name || profile.user_name || "Creator";
+          document.getElementById("creator-handle").innerText = `@${profile.user_name || 'creator'}`;
+          document.getElementById("creator-followers").innerText = `${Number(profile.followers_count || 0).toLocaleString()} followers`;
+
+          if (profile.is_verified) {
+            document.getElementById("creator-verified-badge").style.display = "inline-block";
+          } else {
+            document.getElementById("creator-verified-badge").style.display = "none";
+          }
+
+          const lines = formattedCss.split("\n").length;
+          const kbSize = (new Blob([formattedCss]).size / 1024).toFixed(1);
+          const rules = (formattedCss.match(/\{/g) || []).length;
+          const keyframes = (formattedCss.match(/@keyframes/gi) || []).length;
+
+          document.getElementById("css-stat-lines").innerText = lines;
+          document.getElementById("css-stat-size").innerText = `${kbSize} KB`;
+          document.getElementById("css-stat-rules").innerText = rules;
+          document.getElementById("css-stat-keyframes").innerText = keyframes;
+
+          document.getElementById("code-viewer-size-tag").innerText = `${kbSize} KB • ${lines} lines`;
+          document.getElementById("css-code-editor").value = formattedCss;
+
+          this.refreshSandbox();
+        } catch (err) {
+          alert(`CSS Extraction Error: ${err.message}`);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Extract Custom CSS & Bio</span>
+          `;
+        }
+      }
+
+      beautifyCss(css) {
+        if (!css) return "";
+        let clean = css.trim().replace(/\r\n/g, "\n").replace(/\t/g, "  ");
+        return `/* ==========================================================================\n   JanitorAI Profile Custom CSS Stylesheet\n   Extracted via Export Suite — https://export.domcord.org\n   ========================================================================== */\n\n` + clean;
+      }
+
+      async copyCss() {
+        if (!this.currentProfileCss) return;
+        try {
+          await navigator.clipboard.writeText(this.currentProfileCss);
+          const btn = document.getElementById("btn-copy-css");
+          const original = btn.innerHTML;
+          btn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="color: #10b981;">Copied!</span>
+          `;
+          setTimeout(() => btn.innerHTML = original, 2000);
+        } catch (e) {
+          alert("Failed to copy to clipboard.");
+        }
+      }
+
+      downloadCssFile() {
+        if (!this.currentProfileCss) return;
+        const name = (this.currentProfileData ? this.currentProfileData.user_name : "profile") || "profile";
+        const blob = new Blob([this.currentProfileCss], { type: "text/css" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${name}_custom_styles.css`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      async downloadCssZip() {
+        if (!this.currentProfileData) return;
+        const zip = new JSZip();
+        const uname = this.currentProfileData.user_name || "creator";
+
+        zip.file("styles.css", this.currentProfileCss);
+        zip.file("about_me.html", this.currentProfileData.about_me || "");
+        zip.file("profile_data.json", JSON.stringify(this.currentProfileData, null, 2));
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${uname}_JanitorAI_Profile_Bundle.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      toggleSandboxPreview() {
+        const box = document.getElementById("sandbox-preview-container");
+        const btn = document.getElementById("btn-toggle-sandbox");
+        if (box.style.display === "block") {
+          box.style.display = "none";
+          btn.classList.remove("primary");
+        } else {
+          box.style.display = "block";
+          btn.classList.add("primary");
+          this.refreshSandbox();
+        }
+      }
+
+      refreshSandbox() {
+        const iframe = document.getElementById("sandbox-iframe");
+        if (!iframe || !this.currentProfileData) return;
+
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body {
+                background: #09090b;
+                color: #e4e4e7;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 0;
+                padding: 24px;
+                box-sizing: border-box;
+              }
+              ${this.currentProfileCss}
+            </style>
+          </head>
+          <body>
+            <div class="janitor-bio-container">
+              ${this.currentProfileData.about_me || "<p>No custom bio content</p>"}
+            </div>
+          </body>
+          </html>
+        `;
+        doc.open();
+        doc.write(html);
+        doc.close();
+      }
+
+      onGatewayModeChange() {
+        const mode = document.getElementById("setting-gateway-mode").value;
+        const customRow = document.getElementById("setting-custom-proxy-row");
+        if (mode === "custom") {
+          customRow.style.display = "flex";
+        } else {
+          customRow.style.display = "none";
+        }
+      }
+
+      async testDiagnostics() {
+        const resBox = document.getElementById("diagnostics-result");
+        resBox.innerText = "Testing gateway latency...";
+        const start = performance.now();
+
+        try {
+          const resp = await fetch(this.getApiUrl("characters?sort=popular&page=1"), {
+            headers: this.getHeaders()
+          });
+          const latency = Math.round(performance.now() - start);
+
+          if (resp.ok) {
+            resBox.innerHTML = `<span style="color: #34d399;">Connection Successful</span> • Latency: ${latency}ms • Status: 200 OK`;
+          } else {
+            resBox.innerHTML = `<span style="color: #fbbf24;">Gateway Responded</span> • Status: ${resp.status} ${resp.statusText} (${latency}ms)`;
+          }
+        } catch (err) {
+          resBox.innerHTML = `<span style="color: #f87171;">Connection Failed</span>: ${err.message}. If running in browser, ensure Companion Server is active or use Cloud Gateway.`;
+        }
+      }
+
+      logMessage(msg, type = "info") {
+        const term = document.getElementById("activity-terminal");
+        if (!term) return;
+        const time = new Date().toLocaleTimeString();
+        const div = document.createElement("div");
+        div.className = "log-entry";
+        div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg-${type}">${this.escapeHtml(msg)}</span>`;
+        term.appendChild(div);
+        term.scrollTop = term.scrollHeight;
+      }
+
+      escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    }
+
+    const app = new ExportApp();
+  </script>
+</body>
+</html>
