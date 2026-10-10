@@ -181,6 +181,9 @@
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
       overflow-x: hidden;
+      scrollbar-gutter: stable;
+      width: 100%;
+      max-width: 100%;
       accent-color: var(--text-primary);
       transition: background-color var(--duration-normal) var(--ease-in-out), color var(--duration-normal) var(--ease-in-out);
     }
@@ -190,6 +193,10 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     a {
@@ -5254,12 +5261,14 @@
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-/* View Panels Smooth Transition */
+/* View Panels Smooth Transition (No Vertical Shift to Guarantee Mobile Width Stability) */
 .view-panel {
   opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  transition: opacity 0.16s ease;
 }
 
 .view-panel.is-hidden {
@@ -5268,12 +5277,10 @@
 
 .view-panel.is-entering {
   opacity: 0 !important;
-  transform: translateY(10px) !important;
 }
 
 .view-panel.is-leaving {
   opacity: 0 !important;
-  transform: translateY(-8px) !important;
   pointer-events: none !important;
 }
 
@@ -6682,26 +6689,40 @@
    ========================================================================== */
 html, body {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 main.container {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: var(--container-max);
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 .view-panel {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 #view-css {
   min-height: 55vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dominion-footer {
@@ -7096,126 +7117,116 @@ main.container {
   justify-content: center;
 }
 
-/* 3D Isometric Stacked Chips Stage */
-.splash-chips-stage {
+/* Main Exporter SVG Icon Kinetic Loader */
+.splash-icon-stage {
   position: relative;
-  width: 120px;
-  height: 110px;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto var(--space-6);
-  perspective: 900px;
-  transform-style: preserve-3d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  animation: splashIconFloat 3.2s ease-in-out infinite;
 }
 
-.stacked-chip {
+@keyframes splashIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.splash-icon-glow {
   position: absolute;
-  width: 90px;
-  height: 32px;
-  border-radius: 9999px;
-  transform-style: preserve-3d;
-  will-change: transform, opacity, box-shadow;
-  transition: transform 0.4s ease;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 45%, transparent 70%);
+  filter: blur(14px);
+  pointer-events: none;
+  animation: splashGlowPulse 2.4s ease-in-out infinite alternate;
 }
 
-.chip-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  position: relative;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+@keyframes splashGlowPulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 1; }
 }
 
-.chip-core {
-  width: 60%;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.2);
+.splash-dominion-icon {
+  width: 72px;
+  height: 72px;
+  overflow: visible !important;
+  color: #FFFFFF;
+  display: block;
 }
 
-.chip-sheen {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  transform: skewX(-20deg);
-  animation: chipSheenScan 2.4s ease-in-out infinite;
+.splash-plate {
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: 12px 12px;
+  will-change: transform, stroke, fill, opacity, filter;
 }
 
-@keyframes chipSheenScan {
-  0%, 30% { left: -100%; }
-  70%, 100% { left: 160%; }
+/* Top diamond polygon plate */
+.splash-plate-top {
+  stroke: #FFFFFF;
+  fill: rgba(255, 255, 255, 0.12);
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.35));
+  animation: splashPlateTopAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
 
-/* Top Chip */
-.chip-top {
-  z-index: 3;
-  animation: chipStackTop 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-.chip-top .chip-inner {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(30, 30, 36, 0.95) 100%);
-  border-color: #FFFFFF;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.25);
-}
-.chip-top .chip-core {
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+/* Middle polyline chevron plate */
+.splash-plate-mid {
+  stroke: #E4E4E7;
+  opacity: 0.88;
+  animation: splashPlateMidAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
 
-/* Middle Chip */
-.chip-mid {
-  z-index: 2;
-  animation: chipStackMid 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-.chip-mid .chip-inner {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(20, 20, 24, 0.95) 100%);
-  border-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
+/* Bottom polyline chevron plate */
+.splash-plate-bot {
+  stroke: #A1A1AA;
+  opacity: 0.72;
+  animation: splashPlateBotAnim 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
 
-/* Bottom Chip */
-.chip-bot {
-  z-index: 1;
-  animation: chipStackBot 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-.chip-bot .chip-inner {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(12, 12, 14, 0.95) 100%);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.9);
-}
-
-@keyframes chipStackTop {
+@keyframes splashPlateTopAnim {
   0%, 100% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(-14px) translateZ(18px);
+    transform: translateY(-2px);
+    stroke: #E4E4E7;
+    fill: rgba(255, 255, 255, 0.08);
+    filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.2));
   }
   50% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(-32px) translateZ(48px);
+    transform: translateY(-7px);
+    stroke: #FFFFFF;
+    fill: rgba(255, 255, 255, 0.25);
+    filter: drop-shadow(0 4px 14px rgba(255, 255, 255, 0.6));
   }
 }
 
-@keyframes chipStackMid {
+@keyframes splashPlateMidAnim {
   0%, 100% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(0px) translateZ(0px);
+    transform: translateY(0);
+    opacity: 0.82;
+    stroke: #D4D4D8;
   }
   50% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(0px) translateZ(0px) scale(1.03);
+    transform: translateY(0) scale(1.05);
+    opacity: 1;
+    stroke: #FFFFFF;
+    filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));
   }
 }
 
-@keyframes chipStackBot {
+@keyframes splashPlateBotAnim {
   0%, 100% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(14px) translateZ(-18px);
+    transform: translateY(2px);
+    opacity: 0.68;
+    stroke: #8E8E93;
   }
   50% {
-    transform: rotateX(52deg) rotateZ(-15deg) translateY(28px) translateZ(-42px);
+    transform: translateY(7px);
+    opacity: 0.95;
+    stroke: #D4D4D8;
+    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
   }
 }
 
@@ -7267,23 +7278,22 @@ main.container {
 [data-theme="light"] .splash-title {
   color: #121215;
 }
-[data-theme="light"] .chip-top .chip-inner {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F1F3F5 100%);
-  border-color: #121215;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14), 0 0 16px rgba(0, 0, 0, 0.06);
+[data-theme="light"] .splash-dominion-icon {
+  color: #18181B;
 }
-[data-theme="light"] .chip-top .chip-core {
-  background: #18181B;
+[data-theme="light"] .splash-icon-glow {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 70%);
 }
-[data-theme="light"] .chip-mid .chip-inner {
-  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
-  border-color: rgba(0, 0, 0, 0.25);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.1);
+[data-theme="light"] .splash-plate-top {
+  stroke: #18181B;
+  fill: rgba(0, 0, 0, 0.06);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
 }
-[data-theme="light"] .chip-bot .chip-inner {
-  background: linear-gradient(135deg, #F1F3F5 0%, #DEE2E6 100%);
-  border-color: rgba(0, 0, 0, 0.18);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+[data-theme="light"] .splash-plate-mid {
+  stroke: #3F3F46;
+}
+[data-theme="light"] .splash-plate-bot {
+  stroke: #71717A;
 }
 [data-theme="light"] .splash-meter {
   background: rgba(0, 0, 0, 0.08);
@@ -7298,24 +7308,14 @@ main.container {
   <div id="app-splash-loader" class="app-splash-loader">
     <div class="splash-backdrop-bloom"></div>
     <div class="splash-content-box">
-      <!-- 3D Stacked Isometric Chips -->
-      <div class="splash-chips-stage">
-        <div class="stacked-chip chip-top">
-          <div class="chip-inner">
-            <div class="chip-core"></div>
-            <div class="chip-sheen"></div>
-          </div>
-        </div>
-        <div class="stacked-chip chip-mid">
-          <div class="chip-inner">
-            <div class="chip-core"></div>
-          </div>
-        </div>
-        <div class="stacked-chip chip-bot">
-          <div class="chip-inner">
-            <div class="chip-core"></div>
-          </div>
-        </div>
+      <!-- MAIN EXPORTER SVG ICON KINETIC LOADER -->
+      <div class="splash-icon-stage">
+        <svg class="splash-dominion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <polygon class="splash-plate splash-plate-top" points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline class="splash-plate splash-plate-mid" points="2 12 12 17 22 12"/>
+          <polyline class="splash-plate splash-plate-bot" points="2 17 12 22 22 17"/>
+        </svg>
+        <div class="splash-icon-glow"></div>
       </div>
       <div class="splash-brand">
         <div class="splash-title">Export</div>
@@ -8204,47 +8204,27 @@ class ExportApp {
     const currentView = tab === 'vault' ? viewVault : viewCss;
     const leavingView = tab === 'vault' ? viewCss : viewVault;
 
-    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
-      if (leavingView) {
-        leavingView.classList.add('is-hidden');
-        leavingView.style.display = 'none';
-      }
-      if (currentView) {
-        currentView.classList.remove('is-hidden', 'is-leaving');
-        currentView.classList.add('is-entering');
-        currentView.style.display = 'block';
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            currentView.classList.remove('is-entering');
-          });
-        });
-      }
-      return;
-    }
-
     if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
 
-    leavingView.classList.remove('is-entering');
-    leavingView.classList.add('is-leaving');
-
-    this._tabTransitionTimeout = setTimeout(() => {
+    if (leavingView) {
       leavingView.classList.add('is-hidden');
-      leavingView.classList.remove('is-leaving');
+      leavingView.classList.remove('is-entering', 'is-leaving');
       leavingView.style.display = 'none';
+    }
 
-      if (currentView) {
-        currentView.classList.remove('is-hidden', 'is-leaving');
-        currentView.classList.add('is-entering');
-        currentView.style.display = 'block';
+    if (currentView) {
+      currentView.style.display = '';
+      currentView.classList.remove('is-hidden', 'is-leaving');
+      currentView.classList.add('is-entering');
 
-        void currentView.offsetWidth; // Force reflow
+      void currentView.offsetWidth; // Force reflow
 
-        requestAnimationFrame(() => {
-          currentView.classList.remove('is-entering');
-        });
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 180);
+      requestAnimationFrame(() => {
+        currentView.classList.remove('is-entering');
+      });
+    }
+
+    window.scrollTo(0, 0);
   }
 
   setExportFormat(fmt) {

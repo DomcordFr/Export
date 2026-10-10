@@ -175,47 +175,27 @@ class ExportApp {
     const currentView = tab === 'vault' ? viewVault : viewCss;
     const leavingView = tab === 'vault' ? viewCss : viewVault;
 
-    if (!leavingView || leavingView.style.display === 'none' || leavingView.classList.contains('is-hidden')) {
-      if (leavingView) {
-        leavingView.classList.add('is-hidden');
-        leavingView.style.display = 'none';
-      }
-      if (currentView) {
-        currentView.classList.remove('is-hidden', 'is-leaving');
-        currentView.classList.add('is-entering');
-        currentView.style.display = 'block';
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            currentView.classList.remove('is-entering');
-          });
-        });
-      }
-      return;
-    }
-
     if (this._tabTransitionTimeout) clearTimeout(this._tabTransitionTimeout);
 
-    leavingView.classList.remove('is-entering');
-    leavingView.classList.add('is-leaving');
-
-    this._tabTransitionTimeout = setTimeout(() => {
+    if (leavingView) {
       leavingView.classList.add('is-hidden');
-      leavingView.classList.remove('is-leaving');
+      leavingView.classList.remove('is-entering', 'is-leaving');
       leavingView.style.display = 'none';
+    }
 
-      if (currentView) {
-        currentView.classList.remove('is-hidden', 'is-leaving');
-        currentView.classList.add('is-entering');
-        currentView.style.display = 'block';
+    if (currentView) {
+      currentView.style.display = '';
+      currentView.classList.remove('is-hidden', 'is-leaving');
+      currentView.classList.add('is-entering');
 
-        void currentView.offsetWidth; // Force reflow
+      void currentView.offsetWidth; // Force reflow
 
-        requestAnimationFrame(() => {
-          currentView.classList.remove('is-entering');
-        });
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 180);
+      requestAnimationFrame(() => {
+        currentView.classList.remove('is-entering');
+      });
+    }
+
+    window.scrollTo(0, 0);
   }
 
   setExportFormat(fmt) {
