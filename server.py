@@ -273,43 +273,11 @@ def extract_atelier_data(raw_profile: dict) -> dict:
     else:
         banner_url = raw_images[0] if raw_images else None
 
-    # 4. Standalone Preview Bundle
-    bg_col = native_style.get("background_color") or "#0c0d12"
-    txt_col = native_style.get("text_color") or "#f0f2f8"
-
-    html_bundle = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{html.escape(display_name)} (@{html.escape(username)}) — JanitorAI Profile Style</title>
-  <style>
-    *, *::before, *::after {{
-      box-sizing: border-box;
-    }}
-    body {{
-      margin: 0;
-      padding: 0;
-      background-color: {bg_col};
-      color: {txt_col};
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }}
-    .profile-page-container {{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }}
-{combined_css}
-  </style>
-</head>
-<body>
-  <div class="profile-page-container">
-{html_markup}
-  </div>
-</body>
-</html>"""
+    # 4. Pure Custom Profile Code (strictly the About Me CSS & DIVs people use for custom profiles)
+    custom_profile_code = raw_about.strip()
+    if combined_css and "<style" not in custom_profile_code.lower():
+        custom_profile_code = f"<style>\n{combined_css}\n</style>\n\n{html_markup}".strip()
+    html_bundle = custom_profile_code
 
     # 5. LLM AI Prompt Context
     vars_block = "\n".join([f"  {k}: {v};" for k, v in css_variables.items()]) if css_variables else "  /* No root variables declared */"
@@ -386,6 +354,10 @@ def extract_atelier_data(raw_profile: dict) -> dict:
             "createdAt": raw_profile.get("created_at"),
             "janitorUrl": f"https://janitorai.com/profiles/{cid}"
         },
+        "css": combined_css,
+        "divs": html_markup,
+        "code": custom_profile_code,
+        "bundle": custom_profile_code,
         "styling": {
             "css": combined_css,
             "styleTagCount": len(style_blocks),
@@ -952,16 +924,16 @@ class ExportHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(css_data)))
             self.end_headers()
             self.wfile.write(css_data)
-        elif fmt == "html":
-            html_data = result["markup"]["html"].encode("utf-8")
+        elif fmt in ("html", "div", "divs", "markup"):
+            html_data = result["divs"].encode("utf-8")
             self.send_response(200)
             self._set_cors_headers()
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(html_data)))
             self.end_headers()
             self.wfile.write(html_data)
-        elif fmt == "bundle":
-            bundle_data = result["bundle"].encode("utf-8")
+        elif fmt in ("bundle", "code", "raw"):
+            bundle_data = result["code"].encode("utf-8")
             self.send_response(200)
             self._set_cors_headers()
             self.send_header("Content-Type", "text/html; charset=utf-8")
